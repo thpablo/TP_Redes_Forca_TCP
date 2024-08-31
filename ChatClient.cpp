@@ -59,7 +59,7 @@ void* threadSend(void *param){
   do {
 
     printf("Digite alguma coisa (para sair, digite quit): \n");
-    memset(buffer, '\0', sizeof(buffer)); 
+    memset(buffer, '\0', sizeof(buffer)); // resetar o buffer
     fgets(msg, 1024, stdin);
     //strcpy(buffer, nome);
     //strcat(buffer, "-> ");
