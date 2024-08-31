@@ -31,7 +31,6 @@
 using namespace std;
 
 #define NUM_THREADS 30
-#define NUM_PLAYERS 2
 
 int socketsThreadsIds[NUM_THREADS];
 bool CURRENT_GAME = false;
@@ -71,10 +70,12 @@ public:
 
 	void printWords() const
 	{
+		cout << "Palavras disponiveis: ";
 		for (const auto &word : words)
 		{
-			std::cout << word << std::endl;
+			cout << word << " ";
 		}
+		cout << endl;
 	}
 
 	string randomWord()
@@ -233,10 +234,9 @@ bool isValidInput(string input, vector<string> validInputs)
 string convertCharToString(char *c)
 {
 	string str = c;
-	if (!str.empty() && str.back() == '\n')
-	{
-		str.pop_back(); // Remove o último caractere
-	}
+    if (!str.empty() && str.back() == '\n') {
+        str.pop_back(); // Remove o último caractere
+    }
 	return str;
 }
 
@@ -256,12 +256,10 @@ void *conexao(void *param)
 	difficulty = "facil";	  // Mudar para escolha do jogador
 	Hangman game(difficulty); // Construcao do jogo
 
-	/* Recebe mensagens enquanto jogo nao acaba */
-	do
+	// Enquanto o jogo nao estiver perdido (-1)
+	// ou ganho (1)
+	while (gameStatus != -1 && gameStatus != 1)
 	{
-		// Envia imagem da forca para todos os jogadores
-		pthread_mutex_lock(&mutex);
-
 		string wordShown = game.getWordShown();
 
 		// Char para envio em send()
@@ -271,6 +269,8 @@ void *conexao(void *param)
 
 		// Envia palavra escondida para todos os jogadores
 		cout << "Envia palavra escondida para todos os jogadores: " << wordShown << endl;
+		// Envia imagem da forca para todos os jogadores
+		pthread_mutex_lock(&mutex);
 		for (int i = 0; i < NUM_THREADS; i++)
 		{
 			if (socketsThreadsIds[i] != -1)
@@ -280,30 +280,21 @@ void *conexao(void *param)
 		}
 		pthread_mutex_unlock(&mutex);
 
-		/* Espera mensagem do cliente */
+		/* Espera letra ou palavra do cliente */
 		cout << "Esperando mensagem do cliente...\n";
 		recv(data->sock, buffer, sizeof(buffer), 0);
 		cout << "Mensagem recebida do cliente = " << buffer << endl;
-
+		
 		// input recebe char convertido para comparacao
 		string input = convertCharToString(buffer);
 
 		// Joga com a palavra ou letra e decide se ganhou ou perdeu
 		gameStatus = game.play(input);
-	} while (gameStatus != -1 && gameStatus != 1); // Enquanto o jogo nao estiver perdido (-1)
-												   // ou ganho (1)
+	}
 
 	cout << "Status: " << gameStatus << endl;
 	cout << "Fim de jogo\n" << endl;
 
-	/* Logica para finalizar threads e acabar jogo */
-	pthread_mutex_lock(&mutex);
-	socketsThreadsIds[data->thread_no] = -1; // ID invalido para thread
-	pthread_mutex_unlock(&mutex);
-
-	printf("fechando conexao...\n");
-	shutdown(data->sock, 2);
-	pthread_exit(NULL);
 
 	return NULL;
 }
@@ -349,9 +340,6 @@ int main()
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
-	// Geracao de numeros aleatorios
-	srand(time(nullptr));
 
 	// Cria 30 structs de dados (  int thread_no; int sock;)
 	thdata data[NUM_THREADS];
@@ -401,7 +389,7 @@ int main()
 		data[i].sock = newSocket;
 
 		printf("cliente conectou.\n");
-		pthread_create(&threads[i], &attr, &conexao, (void *)&data[i]);
+    	pthread_create (&threads[i], &attr, &conexao, (void *) &data[i]);
 
 		pthread_mutex_unlock(&mutex);
 	}
