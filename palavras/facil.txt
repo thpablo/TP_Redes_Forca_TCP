@@ -1,0 +1,5 @@
+gato
+cachorro
+bola
+flor
+casa

@@ -1,0 +1,5 @@
+livro
+televisao
+computador
+arvore
+caneta
