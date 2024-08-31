@@ -233,9 +233,10 @@ bool isValidInput(string input, vector<string> validInputs)
 string convertCharToString(char *c)
 {
 	string str = c;
-    if (!str.empty() && str.back() == '\n') {
-        str.pop_back(); // Remove o último caractere
-    }
+	if (!str.empty() && str.back() == '\n')
+	{
+		str.pop_back(); // Remove o último caractere
+	}
 	return str;
 }
 
@@ -283,7 +284,7 @@ void *conexao(void *param)
 		cout << "Esperando mensagem do cliente...\n";
 		recv(data->sock, buffer, sizeof(buffer), 0);
 		cout << "Mensagem recebida do cliente = " << buffer << endl;
-		
+
 		// input recebe char convertido para comparacao
 		string input = convertCharToString(buffer);
 
@@ -296,6 +297,14 @@ void *conexao(void *param)
 	cout << "Fim de jogo\n" << endl;
 
 	/* Logica para finalizar threads e acabar jogo */
+	pthread_mutex_lock(&mutex);
+	socketsThreadsIds[data->thread_no] = -1; // ID invalido para thread
+	pthread_mutex_unlock(&mutex);
+
+	printf("fechando conexao...\n");
+	shutdown(data->sock, 2);
+	pthread_exit(NULL);
+
 	return NULL;
 }
 
