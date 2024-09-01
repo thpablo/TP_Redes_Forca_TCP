@@ -27,10 +27,12 @@
 #include <cctype>	 // Para std::tolower
 
 #include <cstring> // Para std::strcpy
+#include "data.h"
 
 using namespace std;
 
 #define NUM_THREADS 30
+
 
 int socketsThreadsIds[NUM_THREADS];
 bool CURRENT_GAME = false;
@@ -247,7 +249,8 @@ void *conexao(void *param)
 
 	int gameStatus = 0; // Status do jogo
 	string difficulty;	// armazenar qual dificuldade do jogo
-	char buffer[1024];	// buffer da mensagem do cliente
+	//char buffer[1024];	// buffer da mensagem do cliente
+	ClientData cData;
 	char msgChooseDifficulty[] = "Escolha a dificuldade para o jogo\n";
 	string waitOtherPlayer = playersInConection + " jogadores conectados\n";
 	vector<string> validInputs{"facil", "medio", "dificil"}; // dificuldades válidas para o jogo
@@ -263,9 +266,10 @@ void *conexao(void *param)
 		string wordShown = game.getWordShown();
 
 		// Char para envio em send()
-		char wordShownToSend[wordShown.size() + 1];
+		//char wordShownToSend[wordShown.size() + 1];
+		ServerData sendData;
 		// Copia o conteúdo da std::string para o array de char
-		strcpy(wordShownToSend, wordShown.c_str());
+		strcpy(sendData.shownWord, wordShown.c_str());
 
 		// Envia palavra escondida para todos os jogadores
 		cout << "Envia palavra escondida para todos os jogadores: " << wordShown << endl;
@@ -275,18 +279,19 @@ void *conexao(void *param)
 		{
 			if (socketsThreadsIds[i] != -1)
 			{
-				send(socketsThreadsIds[i], &wordShownToSend, sizeof(wordShownToSend), 0);
+				send(socketsThreadsIds[i], &sendData, sizeof(ServerData), 0);
 			}
 		}
 		pthread_mutex_unlock(&mutex);
 
 		/* Espera letra ou palavra do cliente */
 		cout << "Esperando mensagem do cliente...\n";
-		recv(data->sock, buffer, sizeof(buffer), 0);
-		cout << "Mensagem recebida do cliente = " << buffer << endl;
+		recv(data->sock, &cData, sizeof(ClientData), 0);
+		cout << "Mensagem recebida do cliente = " << cData.buffer << endl;
+		printf("\n%d\n", cData.type);
 		
 		// input recebe char convertido para comparacao
-		string input = convertCharToString(buffer);
+		string input = convertCharToString(cData.buffer);
 
 		// Joga com a palavra ou letra e decide se ganhou ou perdeu
 		gameStatus = game.play(input);
@@ -352,7 +357,7 @@ int main()
 
 	// lembrar de alterar se o servidor e cliente estiverem em máquinas diferentes. Nesse caso, colocar o IP da máquina que será servidora
 	// o IP 127.0.0.1 só funciona se cliente e servidor estiverem na mesma máquina
-	serverAddr.sin_addr.s_addr = inet_addr("192.168.1.5");
+	serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
 	bind(welcomeSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));

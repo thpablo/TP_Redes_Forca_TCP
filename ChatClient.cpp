@@ -14,8 +14,7 @@
 #include <unistd.h> // for close
 #include <arpa/inet.h>    // htons(), inet_addr()
 #include <sys/types.h>    // AF_INET, SOCK_STREAM
-
-
+#include "data.h"
 
 typedef struct str_thdata{
   int sock;
@@ -27,7 +26,8 @@ void* threadRecv(void *param){
   thdata *data;
   data = (thdata *) param;
  
-  char buffer[1024];
+  //char buffer[1024];
+  ServerData receivedData;
 
   int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
   if (s != 0) {
@@ -36,8 +36,8 @@ void* threadRecv(void *param){
   }
 
   while (1){
-    recv(data->sock, buffer, sizeof(buffer), 0);
-    printf("%s\n",buffer); 
+    recv(data->sock, &receivedData, sizeof(ServerData), 0);
+    printf("%s\n",receivedData.shownWord); 
   }
 
   return NULL;
@@ -50,28 +50,30 @@ void* threadSend(void *param){
   thdata *data;
   data = (thdata *)param;
 
-  char msg[1024], nome[100], buffer[1024];
+  ClientData cData;
+  char msg[1024], nome[100];// buffer[1024];
 
   //printf("Digite seu nome: \n");
 
   //fgets(nome, 100, stdin);
 
   do {
-
+    //scanf("%d", &cData.type); //Tipo da mensagem enviada
+    cData.type = GUESS;
     printf("Digite alguma coisa (para sair, digite quit): \n");
-    memset(buffer, '\0', sizeof(buffer)); // resetar o buffer
+    memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     fgets(msg, 1024, stdin);
     //strcpy(buffer, nome);
     //strcat(buffer, "-> ");
-    strcat(buffer, msg);
+    strcat(cData.buffer, msg);
     
     // Remove o caractere de nova linha (\n), se presente
-    char* pos = strchr(buffer, '\n');
+    char* pos = strchr(cData.buffer, '\n');
     if (pos) {
         *pos = '\0'; // Substitui '\n' por '\0'
     }
 
-    send(data->sock,buffer,sizeof(buffer),0);  
+    send(data->sock,&cData,sizeof(ClientData),0);  
 
 
   } while (strcmp(msg, "quit\n") != 0);
@@ -101,7 +103,7 @@ int main(){
   
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_port = htons(7891);
-  serverAddr.sin_addr.s_addr = inet_addr("192.168.1.5");
+  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
   memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);  
 
 
