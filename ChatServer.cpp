@@ -268,6 +268,7 @@ void *conexao(void *param)
 		// Char para envio em send()
 		//char wordShownToSend[wordShown.size() + 1];
 		ServerData sendData;
+		sendData.flag = RIGHT;
 		// Copia o conteúdo da std::string para o array de char
 		strcpy(sendData.shownWord, wordShown.c_str());
 
@@ -295,11 +296,27 @@ void *conexao(void *param)
 
 		// Joga com a palavra ou letra e decide se ganhou ou perdeu
 		gameStatus = game.play(input);
-	}
+		
+		//separar em uma função de fim de jogo
+		if(gameStatus == -1 || gameStatus == 1){
+			sendData.flag = WINNER;//alterar para mandar para os clientes quem ganhou e quem perdeu
+			strcpy(sendData.shownWord, wordShown.c_str());
+			pthread_mutex_lock(&mutex);
+			for (int i = 0; i < NUM_THREADS; i++)
+			{
+				if (socketsThreadsIds[i] != -1)
+				{
+					send(socketsThreadsIds[i], &sendData, sizeof(ServerData), 0);
+				}
+			}
+			pthread_mutex_unlock(&mutex);
 
+		}
+
+	}
+	
 	cout << "Status: " << gameStatus << endl;
 	cout << "Fim de jogo\n" << endl;
-
 
 	return NULL;
 }

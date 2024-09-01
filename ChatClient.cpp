@@ -35,10 +35,11 @@ void* threadRecv(void *param){
     exit(0);
   }
 
-  while (1){
+  while (receivedData.flag != WINNER && receivedData.flag != LOSER){
     recv(data->sock, &receivedData, sizeof(ServerData), 0);
     printf("%s\n",receivedData.shownWord); 
   }
+  printf("Fim de Jogo");
 
   return NULL;
 
@@ -121,8 +122,8 @@ int main(){
   pthread_create (&threadSendId, &attr,  &threadSend, (void *) &dataSend);
 
  
-  pthread_join(threadSendId, NULL);
   pthread_join(threadRecvId, NULL);
+  pthread_cancel(threadSendId);
   
 
   pthread_attr_destroy(&attr);
