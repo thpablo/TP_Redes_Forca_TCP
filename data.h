@@ -14,6 +14,7 @@ typedef struct{
 typedef struct{
     char chatBuffer[1024];
     char shownWord[100];
+    int isAMessageFromServer; // 0 = Printa palavra escondida, 1 = Printa buffer do chat
     FlagType flag;
     // char wrongLetters[26];
 

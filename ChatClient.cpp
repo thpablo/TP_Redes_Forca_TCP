@@ -15,6 +15,8 @@
 #include <arpa/inet.h>    // htons(), inet_addr()
 #include <sys/types.h>    // AF_INET, SOCK_STREAM
 #include "data.h"
+#include <iostream>
+using namespace std;
 
 typedef struct str_thdata{
   int sock;
@@ -26,7 +28,7 @@ void* threadRecv(void *param){
   thdata *data;
   data = (thdata *) param;
  
-  //char buffer[1024];
+  char buffer[1024];
   ServerData receivedData;
 
   int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -37,9 +39,14 @@ void* threadRecv(void *param){
 
   while (receivedData.flag != WINNER && receivedData.flag != LOSER){
     recv(data->sock, &receivedData, sizeof(ServerData), 0);
-    printf("%s\n",receivedData.shownWord); 
+    if(receivedData.isAMessageFromServer == 1){
+      printf("%s\n",receivedData.chatBuffer);
+    }
+    else{
+      printf("Palavra: %s\n",receivedData.shownWord);
+    } 
   }
-  printf("Fim de Jogo");
+  printf("Fim de Jogo\n");
 
   return NULL;
 
@@ -120,10 +127,9 @@ int main(){
   dataSend.sock = clientSocket;
   dataSend.thread = threadRecvId;
   pthread_create (&threadSendId, &attr,  &threadSend, (void *) &dataSend);
-
  
   pthread_join(threadRecvId, NULL);
-  pthread_cancel(threadSendId);
+  //pthread_cancel(threadSendId);
   
 
   pthread_attr_destroy(&attr);
