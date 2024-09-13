@@ -38,10 +38,11 @@ int connectedPlayers = 0;			// Contador de jogadores conectados
 
 bool difficultyChosen = false;	// Verifica se ja escolheu dificuldade
 int playerChooseDifficulty = 0; // Jogador que escolhe a dificuldade
+bool inACurrentGame = false;	// Verifica se existe um jogo em andamento
 
 pthread_mutex_t mutex;										// Mutex para controle de acesso a variáveis compartilhadas
 pthread_cond_t cond_two_players = PTHREAD_COND_INITIALIZER; // Mutex para espera de 2 players
-pthread_cond_t cond_your_turn = PTHREAD_COND_INITIALIZER;	// Mutex para espera de 2 players
+pthread_cond_t cond_has_a_game = PTHREAD_COND_INITIALIZER;	// Mutex para espera de 2 players
 
 typedef struct str_thdata
 {
@@ -58,8 +59,7 @@ public:
 	int contError; // Somador com numero de erros
 };
 
-thdata playersData[NUM_THREADS];	// Vetor de dados dos jogadores
-
+thdata playersData[NUM_THREADS]; // Vetor de dados dos jogadores
 
 // Classe para guardar as palavras
 class Words
@@ -264,12 +264,13 @@ string convertCharToString(char *c)
 
 void inGame(Hangman &game, thdata &player1, thdata &player2)
 {
-	thdata currentPlayer; // Dados do jogador atual
-	thdata anotherPlayer; // Dados do outro jogador
+	inACurrentGame = true; // Indica que existe um jogo em andamento
+	thdata currentPlayer;  // Dados do jogador atual
+	thdata anotherPlayer;  // Dados do outro jogador
 
 	int whoIsPlaying = rand() % 2; // Controle do jogador atual, primeiro a jogar é randomizado
-	int gameStatus = 0;	  // Status do jogo
-	ServerData sendData;  // Dados envio servidor -> cliente
+	int gameStatus = 0;			   // Status do jogo
+	ServerData sendData;		   // Dados envio servidor -> cliente
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
 
@@ -327,13 +328,13 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 
 		whoIsPlaying = (whoIsPlaying + 1) % 2; // Alterna o jogador
 		cout << "Alternando o jogador: " << whoIsPlaying << endl;
-		// Acorda a thread do outro jogador para que possa jogar
-		pthread_cond_broadcast(&cond_your_turn);
 	}
 
 	cout << "Status: " << resGame(gameStatus) << endl;
 	cout << "Fim de jogo\n"
 		 << endl;
+	inACurrentGame = false;					  // Indica que não existe um jogo em andamento
+	pthread_cond_broadcast(&cond_has_a_game); // Acorda todas as threads para que possam jogar
 }
 
 // Lobby espera dois players se conectarem
@@ -354,7 +355,7 @@ void *lobby(void *param)
 
 	// Espera dois jogadores se conectarem
 	if ((connectedPlayers % 2) == 1) // Se tiver quantidade impar de jogadores, espera a dupla
-	{ // Espera dois jogadores se conectarem
+	{								 // Espera dois jogadores se conectarem
 		cout << "Esperando outro jogador se conectar" << endl;
 		sendData = convertToChatBuffer("Aguardando outro jogador conectar");
 		send(data->sock, &sendData, sizeof(ServerData), 0); // Avisa cliente que esta esperando outro jogador
@@ -362,6 +363,16 @@ void *lobby(void *param)
 		pthread_cond_wait(&cond_two_players, &mutex); // Espera outro jogador se conectar
 		pthread_mutex_unlock(&mutex);
 	}
+
+	/*
+	// Verifica se existe jogo, se sim, espera no lobby
+	if (!inACurrentGame)
+	{
+		pthread_mutex_lock(&mutex);
+		pthread_cond_wait(&cond_has_a_game, &mutex); // Espera um jogo ser criado
+		pthread_mutex_unlock(&mutex);
+	}
+	*/
 
 	cout << "Jogador " << (data->thread_no + 1) << " conectado. Iniciando jogo..." << endl;
 
@@ -402,7 +413,7 @@ void *lobby(void *param)
 		// Passa dados dos dois players para jogo
 		inGame(game, playersData[connectedPlayers - 2], playersData[connectedPlayers - 1]); // Inicia o jogo
 	}
-	cout << "Saindo do lobby " << data->thread_no << endl;
+
 	pthread_mutex_unlock(&mutex);
 
 	pthread_exit(NULL);
@@ -469,9 +480,8 @@ int main()
 
 		connectedPlayers++;
 		printf("cliente conectou.\n");
-
 		// Quando o segundo jogador conectar, todos podem prosseguir
-		if (connectedPlayers == 2)
+		if ((connectedPlayers % 2) == 0)
 		{
 			pthread_cond_broadcast(&cond_two_players); // Acorda todas as threads
 		}
