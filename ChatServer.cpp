@@ -33,18 +33,33 @@ using namespace std;
 
 #define NUM_THREADS 30
 
+int socketsThreadsIds[NUM_THREADS]; // Vetor de sockets
+int connectedPlayers = 0;			// Contador de jogadores conectados
 
-int socketsThreadsIds[NUM_THREADS];
-bool CURRENT_GAME = false;
-int playersInConection = 0;
+bool difficultyChosen = false;	// Verifica se ja escolheu dificuldade
+int playerChooseDifficulty = 0; // Jogador que escolhe a dificuldade
 
-pthread_mutex_t mutex;
+pthread_mutex_t mutex;										// Mutex para controle de acesso a variáveis compartilhadas
+pthread_cond_t cond_two_players = PTHREAD_COND_INITIALIZER; // Mutex para espera de 2 players
+pthread_cond_t cond_your_turn = PTHREAD_COND_INITIALIZER;	// Mutex para espera de 2 players
 
 typedef struct str_thdata
 {
 	int thread_no;
 	int sock;
 } thdata;
+
+// Classe para o chat e contar tentativas restantes
+class Player
+{
+public:
+	thdata dataPlayer;
+	string name;
+	int contError; // Somador com numero de erros
+};
+
+thdata playersData[NUM_THREADS];	// Vetor de dados dos jogadores
+
 
 // Classe para guardar as palavras
 class Words
@@ -114,31 +129,34 @@ string chooseWord(string difficulty)
 
 	return "";
 }
-
-// Classe com atributos e logica do jogo
 class Hangman
 {
 private:
 	string wordSecret;
-
-protected:
 	string wordShown;
 	int maxError;
 	int contError;
 
 public:
-	// Constroi jogo com a palavra na dificuldade dada
-	Hangman(string difficulty)
+	// Construtor público para permitir múltiplas instâncias
+	Hangman()
 	{
-		wordSecret = chooseWord(difficulty); // Escolhe palavra
+		contError = 0; // Inicializando o contador de erros
+	}
+
+	void createGame(string difficulty)
+	{
+		wordSecret = chooseWord(difficulty); // Escolhe palavra de acordo com a dificuldade
 		cout << "Palavra secreta: " << wordSecret << endl;
 		hideWord();						  // Esconde palavra com "_"
-		maxError = wordSecret.size() + 2; // Erros maximo = tamanho da palavra + 2
+		maxError = wordSecret.size() + 2; // Erros máximo = tamanho da palavra + 2
 	}
+
 	string getWordShown()
 	{
 		return wordShown;
 	}
+
 	// Constroi wordShown escondendo palavra
 	void hideWord()
 	{
@@ -146,44 +164,45 @@ public:
 		wordShown = w;
 	}
 
-	// Desenha partes da forca (com numero maximo de erros)
+	// Desenha partes da forca (com número máximo de erros)
 	void drawPartsOfHangman()
 	{
 		contError++;
 		/*
-			logica para desenho
+			Lógica para desenho
 		*/
+		std::cout << "Desenhou parte da forca. Erros: " << contError << "/" << maxError << std::endl;
 	}
 
 	// Verifica se ganhou
 	bool win()
 	{
-		return (wordSecret == wordShown) ? true : false;
+		return (wordSecret == wordShown);
 	}
 
 	// Joga com a palavra ou letra e decide se ganhou ou perdeu
 	int play(string word)
 	{
-		if (check(word))  // Se houve correspondencia a palavra ou letra
+		if (check(word))  // Se houve correspondência a palavra ou letra
 			return win(); // Retorna se ganhou
 		else
 		{
 			drawPartsOfHangman(); // Desenha partes do corpo
-			// Verifica se houve erros maximos
+			// Verifica se houve erros máximos
 			if (contError == maxError)
 				return -1; // Perde, fim de jogo
 		}
-		return false; // Nao ganha mas continua jogando
+		return false; // Não ganha, mas continua jogando
 	}
 
-	// Verifica se contem letra ou e a palavra
+	// Verifica se contém letra ou é a palavra
 	bool check(string s)
 	{
 		bool found = false;
 
 		if (s.size() == 1)
 		{ // Verifica letra
-			for (int i = 0; i < wordSecret.size(); i++)
+			for (long unsigned int i = 0; i < wordSecret.size(); i++)
 			{
 				if (s[0] == wordSecret[i])
 				{
@@ -201,107 +220,100 @@ public:
 				return true; // Palavra correta
 			}
 		}
-		return false; // Sem correspondencia
+		return false; // Sem correspondência
 	}
 };
 
-/* (NAO EM USO) Valida input com um vetor de inputs validos (mudar posteriormente tipo de vector<string> )
-bool isValidInput(string input, vector<string> validInputs)
+// Converte string para chatBuffer na struct ServerData
+ServerData convertToChatBuffer(string msg)
 {
-	// Conversao para minusculo
-	string lowerInput = input;
-	bool res = false;
-	std::transform(lowerInput.begin(), lowerInput.end(), lowerInput.begin(), [](unsigned char c)
-				   { return std::tolower(c); });
-
-	// Retira \n
-	if (!lowerInput.empty() && lowerInput.back() == '\n')
+	ServerData sendData;
+	sendData.isAMessageFromServer = 1;							 // Inicializa a flag indicando que é uma mensagem do servidor
+	memset(sendData.chatBuffer, 0, sizeof(sendData.chatBuffer)); // Limpa o buffer antes de copiar a mensagem
+	strcat(sendData.chatBuffer, msg.c_str());					 // Copia a mensagem para o buffer
+	// Remove o caractere de nova linha (\n), se presente
+	char *pos = strchr(sendData.chatBuffer, '\n');
+	if (pos)
 	{
-		lowerInput.erase(lowerInput.length() - 1);
+		*pos = '\0'; // Substitui '\n' por '\0'
 	}
-
-	// Compara com entradas validas
-	for (string v : validInputs)
-	{
-		if (lowerInput == v) // Se for igual a uma entrada valida
-			res = true;
-	}
-
-	return res;
+	return sendData;
 }
 
-*/
+// Converte gameStatus para string
+string resGame(int gameStatus)
+{
+	if (gameStatus == -1)
+		return "Perdeu";
+	else if (gameStatus == 1)
+		return "Ganhou";
+	else
+		return "";
+}
 
 // Converte Char para String retirando o \n
 string convertCharToString(char *c)
 {
 	string str = c;
-    if (!str.empty() && str.back() == '\n') {
-        str.pop_back(); // Remove o último caractere
-    }
+	if (!str.empty() && str.back() == '\n')
+	{
+		str.pop_back(); // Remove o último caractere
+	}
 	return str;
 }
 
-void *conexao(void *param)
+void inGame(Hangman &game, thdata &player1, thdata &player2)
 {
-	thdata *data;
-	data = (thdata *)param; /* type cast to a pointer to thdata */
+	thdata currentPlayer; // Dados do jogador atual
+	thdata anotherPlayer; // Dados do outro jogador
 
-	int gameStatus = 0; // Status do jogo
-	string difficulty;	// armazenar qual dificuldade do jogo
-	//char buffer[1024];	// buffer da mensagem do cliente
-	ClientData cData;
-	char msgChooseDifficulty[] = "Escolha a dificuldade para o jogo\n";
-	string waitOtherPlayer = playersInConection + " jogadores conectados\n";
-	vector<string> validInputs{"facil", "medio", "dificil"}; // dificuldades válidas para o jogo
+	int whoIsPlaying = rand() % 2; // Controle do jogador atual, primeiro a jogar é randomizado
+	int gameStatus = 0;	  // Status do jogo
+	ServerData sendData;  // Dados envio servidor -> cliente
+	sendData.isAMessageFromServer = 0;
+	ClientData cData; // Dados recebimento cliente -> servidor
 
-	/* ---------- Construcao do jogo --------- */
-	difficulty = "facil";	  // Mudar para escolha do jogador
-	Hangman game(difficulty); // Construcao do jogo
-
-	// Enquanto o jogo nao estiver perdido (-1)
-	// ou ganho (1)
 	while (gameStatus != -1 && gameStatus != 1)
 	{
-		string wordShown = game.getWordShown();
+		// decide quem é o jogador atual
+		currentPlayer = (whoIsPlaying == 0) ? player1 : player2;
+		anotherPlayer = (whoIsPlaying == 0) ? player2 : player1;
 
-		// Char para envio em send()
-		//char wordShownToSend[wordShown.size() + 1];
-		ServerData sendData;
+		cout << "Jogador Atual: " << currentPlayer.thread_no << endl;
+
+		// Mostrar palavra atualizada para todos
+		string wordShown = game.getWordShown(); // Captura mensagem escondida
 		sendData.flag = RIGHT;
-		// Copia o conteúdo da std::string para o array de char
+		sendData.isAMessageFromServer = 0; // Condição para enviar a palavra escondida
 		strcpy(sendData.shownWord, wordShown.c_str());
 
-		// Envia palavra escondida para todos os jogadores
-		cout << "Envia palavra escondida para todos os jogadores: " << wordShown << endl;
-		// Envia imagem da forca para todos os jogadores
-		pthread_mutex_lock(&mutex);
-		for (int i = 0; i < NUM_THREADS; i++)
-		{
-			if (socketsThreadsIds[i] != -1)
-			{
-				send(socketsThreadsIds[i], &sendData, sizeof(ServerData), 0);
-			}
-		}
-		pthread_mutex_unlock(&mutex);
+		// Envia a palavra escondida para os dois jogadores
+		send(player1.sock, &sendData, sizeof(ServerData), 0);
+		send(player2.sock, &sendData, sizeof(ServerData), 0);
 
-		/* Espera letra ou palavra do cliente */
-		cout << "Esperando mensagem do cliente...\n";
-		recv(data->sock, &cData, sizeof(ClientData), 0);
+		// Envia mensagem para outro jogador aguardar sua vez
+		sendData = convertToChatBuffer("Aguarde sua vez");
+		send(anotherPlayer.sock, &sendData, sizeof(ServerData), 0);
+
+		sendData = convertToChatBuffer("Sua vez");
+		send(currentPlayer.sock, &sendData, sizeof(ServerData), 0);
+		recv(currentPlayer.sock, &cData, sizeof(ClientData), 0);
 		cout << "Mensagem recebida do cliente = " << cData.buffer << endl;
-		printf("\n%d\n", cData.type);
-		
-		// input recebe char convertido para comparacao
+
+		// Converte o input recebido para string
 		string input = convertCharToString(cData.buffer);
 
 		// Joga com a palavra ou letra e decide se ganhou ou perdeu
 		gameStatus = game.play(input);
-		
-		//separar em uma função de fim de jogo
-		if(gameStatus == -1 || gameStatus == 1){
-			sendData.flag = WINNER;//alterar para mandar para os clientes quem ganhou e quem perdeu
+		cout << "Game Status: " << gameStatus << endl;
+		// Verifica vencedor ou perdedor
+		if (gameStatus == -1 || gameStatus == 1)
+		{
+			cout << "Fim de jogo\n"
+				 << endl;
+			cout << "Jogador " << (currentPlayer.thread_no + 1) << " " << resGame(gameStatus) << endl;
+			sendData.flag = (gameStatus == 1) ? WINNER : LOSER; // Define o flag de acordo com o resultado
 			strcpy(sendData.shownWord, wordShown.c_str());
-			pthread_mutex_lock(&mutex);
 			for (int i = 0; i < NUM_THREADS; i++)
 			{
 				if (socketsThreadsIds[i] != -1)
@@ -310,50 +322,95 @@ void *conexao(void *param)
 				}
 			}
 			pthread_mutex_unlock(&mutex);
-
+			break; // Termina o loop se o jogo acabou
 		}
 
+		whoIsPlaying = (whoIsPlaying + 1) % 2; // Alterna o jogador
+		cout << "Alternando o jogador: " << whoIsPlaying << endl;
+		// Acorda a thread do outro jogador para que possa jogar
+		pthread_cond_broadcast(&cond_your_turn);
 	}
-	
-	cout << "Status: " << gameStatus << endl;
-	cout << "Fim de jogo\n" << endl;
 
-	return NULL;
+	cout << "Status: " << resGame(gameStatus) << endl;
+	cout << "Fim de jogo\n"
+		 << endl;
 }
 
-/*
-void *lobby(void *param){
-		// Verifica se numero do player é menor que 2 (quantidade maxima de players)
-		if (data[i].thread_no < NUM_PLAYERS)
-		{
-			CURRENT_GAME = true; // Jogo corrente
-			pthread_create(&threads[i], &attr, &conexao, (void *)&data[i]);
-		}
-		else{ // Se nao, espera na fila
-			pthread_create(&threads[i], &attr, &waitOnQueue, (void *)&data[i]);
-		}
-}
-
-void *waitOnQueue(void *param)
+// Lobby espera dois players se conectarem
+void *lobby(void *param)
 {
-	thdata *data = (thdata *)param; // Dados da thread
+	thdata *data;
+	data = (thdata *)param; /* type cast to a pointer to thdata */
+	ServerData sendData;
+	Hangman game;
 
-	string waitToGame = "AGUARDE FINALIZAR JOGO\n";
+	pthread_mutex_lock(&mutex);
+	playersData[data->thread_no] = *(data);
+	pthread_mutex_unlock(&mutex);
 
-	do
+	// Envia número da thread para o jogador
+	sendData = convertToChatBuffer("Você é o jogador " + to_string(data->thread_no + 1));
+	send(data->sock, &sendData, sizeof(ServerData), 0);
+
+	// Espera dois jogadores se conectarem
+	if ((connectedPlayers % 2) == 1) // Se tiver quantidade impar de jogadores, espera a dupla
+	{ // Espera dois jogadores se conectarem
+		cout << "Esperando outro jogador se conectar" << endl;
+		sendData = convertToChatBuffer("Aguardando outro jogador conectar");
+		send(data->sock, &sendData, sizeof(ServerData), 0); // Avisa cliente que esta esperando outro jogador
+		pthread_mutex_lock(&mutex);
+		pthread_cond_wait(&cond_two_players, &mutex); // Espera outro jogador se conectar
+		pthread_mutex_unlock(&mutex);
+	}
+
+	cout << "Jogador " << (data->thread_no + 1) << " conectado. Iniciando jogo..." << endl;
+
+	// Randomiza a escolha do jogador que escolhe a dificuldade
+	pthread_mutex_lock(&mutex);
+	// Verifica se ja escolheu dificuldade, se não, randomiza
+	if (!difficultyChosen)
 	{
-		// mensagem a cada 10 segundos para esperar
-		cout << waitToGame << endl;
-		send(socketsThreadsIds[data->thread_no], &waitToGame, sizeof(waitToGame), 0);
-		this_thread::sleep_for(std::chrono::seconds(10));
-	} while (CURRENT_GAME); // Enquanto existir um jogo corrente
+		playerChooseDifficulty = rand() % 2;
+		difficultyChosen = true;
+	}
+	pthread_mutex_unlock(&mutex);
 
-	return NULL;
+	// Escolhe a dificuldade
+	pthread_mutex_lock(&mutex);
+	if ((data->thread_no % 2) != playerChooseDifficulty)
+	{
+		pthread_cond_wait(&cond_two_players, &mutex); // Espera o outro jogador escolher a dificuldade
+	}
+
+	else if ((data->thread_no % 2) == playerChooseDifficulty)
+	{
+		// Envia mensagem para o jogador 0 escolher a dificuldade
+		cout << "Enviando mensagem para jogador escolher dificuldade" << endl;
+		sendData = convertToChatBuffer("Escolha a dificuldade para o jogo\n");
+		send(data->sock, &sendData, sizeof(ServerData), 0);
+
+		// Recebe a dificuldade escolhida pelo jogador 0
+		ClientData cData;
+		recv(data->sock, &cData, sizeof(ClientData), 0);
+		string difficulty = convertCharToString(cData.buffer);
+		cout << "Dificuldade escolhida: " << difficulty << endl;
+
+		// Cria jogo com a dificuldade escolhida
+		game.createGame(difficulty);			   // Cria jogo com dificuldade escolhida
+		pthread_cond_broadcast(&cond_two_players); // Acorda a thread do outro jogador para que possa jogar
+
+		// Passa dados dos dois players para jogo
+		inGame(game, playersData[connectedPlayers - 2], playersData[connectedPlayers - 1]); // Inicia o jogo
+	}
+	cout << "Saindo do lobby " << data->thread_no << endl;
+	pthread_mutex_unlock(&mutex);
+
+	pthread_exit(NULL);
 }
-*/
 
 int main()
 {
+	srand(time(NULL));
 	int welcomeSocket, newSocket;
 
 	struct sockaddr_in serverAddr;
@@ -410,9 +467,17 @@ int main()
 		data[i].thread_no = i;
 		data[i].sock = newSocket;
 
+		connectedPlayers++;
 		printf("cliente conectou.\n");
-    	pthread_create (&threads[i], &attr, &conexao, (void *) &data[i]);
 
+		// Quando o segundo jogador conectar, todos podem prosseguir
+		if (connectedPlayers == 2)
+		{
+			pthread_cond_broadcast(&cond_two_players); // Acorda todas as threads
+		}
+
+		pthread_create(&threads[i], &attr, &lobby, (void *)&data[i]);
+		i++;
 		pthread_mutex_unlock(&mutex);
 	}
 
@@ -424,63 +489,9 @@ int main()
 	}
 
 	/* Clean up and exit */
+	pthread_cond_destroy(&cond_two_players);
 	pthread_attr_destroy(&attr);
 	pthread_mutex_destroy(&mutex);
 
 	return 0;
 }
-
-// backup para conexao
-/*-------------------
-		Lógica pra esperar 2 players
-	pthread_mutex_lock(&mutex);
-	playersInConection++; // Aumenta numero de players conectados
-
-	// Informacao de players conectados
-	cout << "Numero de jogadores conectados: " << playersInConection << "\n"<< endl;
-	send(socketsThreadsIds[data->thread_no], &playersInConection, sizeof(int), 0);
-
-	pthread_mutex_unlock(&mutex);
-	while (playersInConection != 2){};
-	---------------------------*/
-
-/* Envio da escolha de dificuldade
-printf("Enviando mensagem de escolha de dificuldade para os dois players....\n");
-pthread_mutex_lock(&mutex);
-
-// Envia mensagem de dificuldade
-send(socketsThreadsIds[data->thread_no], msgChooseDifficulty, sizeof(msgChooseDifficulty), 0);
-pthread_mutex_unlock(&mutex);
-*/
-
-/* Espera e escolha da dificuldade
-recv(data->sock, buffer, sizeof(buffer), 0); // recebe mensagem do cliente
-printf("Dificuldade recebida do cliente = %s\n", buffer);
-
-while (!isValidInput(buffer, validInputs)) // Verifica resposta valida
-{
-	// reenviar mensagem esperando resposta valida
-	pthread_mutex_lock(&mutex);
-	send(data->sock, msgChooseDifficulty, sizeof(msgChooseDifficulty), 0);
-	pthread_mutex_unlock(&mutex);
-
-	// recebe mensagem do cliente
-	printf("Aguardando nova tentativa de dificuldade\n");
-	recv(data->sock, &buffer, sizeof(buffer), 0);
-	printf("Dificuldade recebida do cliente = %s\n", buffer);
-}*/
-/* Retorna a escolha para o cliente
-char replyToClient[] = "Voce escolheu a dificuldade\n";
-pthread_mutex_lock(&mutex);
-send(data->sock, replyToClient, sizeof(replyToClient), 0);
-validDifficultyInput++; // Quantidade de respostas de dificuldade validas
-pthread_mutex_unlock(&mutex);
-
-while (validDifficultyInput < 2)
-{
-};
-/**----
- * Lógica para escolher qual dificuldade
- */
-
-/** Escolher palavra */
