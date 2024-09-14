@@ -18,10 +18,74 @@
 #include <iostream>
 using namespace std;
 
+bool end_flag = 0; //quando passa a ser 1, todas as threads encerram
+int chatType = -1;
+
 typedef struct str_thdata{
   int sock;
   pthread_t thread;
 } thdata;
+
+
+void* threadSendChat(void *param){
+  thdata *data;
+  data = (thdata *)param;
+  ClientData cData;
+  char msg[1024];
+
+  while(!end_flag){
+    printf("Digite alguma coisa (para sair, digite quit): \n");
+    memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
+    fgets(cData.buffer, 1024, stdin);
+    //strcpy(buffer, nome);
+    //strcat(buffer, "-> ");
+    //strcat(cData.buffer, msg);
+    
+    // Remove o caractere de nova linha (\n), se presente
+    char* pos = strchr(cData.buffer, '\n');
+    if (pos) {
+        *pos = '\0'; // Substitui '\n' por '\0'
+    }
+
+    send(data->sock,&cData,sizeof(ClientData),0);
+
+  }
+  return NULL;
+}
+
+void* threadSendGameGuess(void *param){
+  thdata *data;
+  data = (thdata *)param;
+
+
+
+  ClientData cData;
+  char msg[1024], nome[100];
+
+  while(!end_flag){
+    printf("Digite alguma coisa (para sair, digite quit): \n");
+    memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
+    fgets(cData.buffer, 1024, stdin);
+    //strcpy(buffer, nome);
+    //strcat(buffer, "-> ");
+    //strcat(cData.buffer, msg);
+    
+    // Remove o caractere de nova linha (\n), se presente
+    char* pos = strchr(cData.buffer, '\n');
+    if (pos) {
+        *pos = '\0'; // Substitui '\n' por '\0'
+    }
+
+    send(data->sock,&cData,sizeof(ClientData),0);
+
+  }
+  return NULL;
+}
+
+
+
+
+
 
 void* threadRecv(void *param){
 
@@ -51,40 +115,29 @@ void* threadRecv(void *param){
   return NULL;
 
 }
-#include <iostream>
-using namespace std;
+
+
 void* threadSend(void *param){
-
+  pthread_t threadChatId, threadGameGuessId;
   thdata *data;
-  data = (thdata *)param;
+  data = (thdata *) param;
 
-  ClientData cData;
   char msg[1024], nome[100];// buffer[1024];
 
   //printf("Digite seu nome: \n");
 
   //fgets(nome, 100, stdin);
+  pthread_create (&threadChatId, NULL,  &threadSendChat, param);
+  pthread_create (&threadGameGuessId, NULL,  &threadRecv, param);
 
   do {
-    //scanf("%d", &cData.type); //Tipo da mensagem enviada
-    cData.type = GUESS;
-    printf("Digite alguma coisa (para sair, digite quit): \n");
-    memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
-    fgets(msg, 1024, stdin);
-    //strcpy(buffer, nome);
-    //strcat(buffer, "-> ");
-    strcat(cData.buffer, msg);
     
-    // Remove o caractere de nova linha (\n), se presente
-    char* pos = strchr(cData.buffer, '\n');
-    if (pos) {
-        *pos = '\0'; // Substitui '\n' por '\0'
-    }
-
-    send(data->sock,&cData,sizeof(ClientData),0);  
-
-
+    scanf("%d", &chatType); //Tipo da mensagem enviada
+    sleep(1);
   } while (strcmp(msg, "quit\n") != 0);
+
+  pthread_join(threadChatId, NULL);
+  pthread_join(threadGameGuessId, NULL);
 
   printf("Fechando Conexao e encerrando o programa...\n"); 
   pthread_cancel(data->thread);
