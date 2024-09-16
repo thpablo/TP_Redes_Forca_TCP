@@ -403,6 +403,7 @@ void *lobby(void *param)
 		// Recebe a dificuldade escolhida pelo jogador 0
 		ClientData cData;
 		recv(data->sock, &cData, sizeof(ClientData), 0);
+		cout << convertCharToString(cData.buffer);
 		string difficulty = convertCharToString(cData.buffer);
 		cout << "Dificuldade escolhida: " << difficulty << endl;
 
