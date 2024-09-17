@@ -2,7 +2,7 @@
 #define DATA_H
 
 typedef enum{CHAT, GUESS}ClientDataType;
-typedef enum{RIGHT, WRONG, WINNER, LOSER}FlagType;
+typedef enum{RIGHT, WRONG, WINNER, LOSER, INPUT}FlagType;
 
 //dados do cliente ao server
 typedef struct{
