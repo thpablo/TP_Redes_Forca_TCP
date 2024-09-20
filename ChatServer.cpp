@@ -183,7 +183,7 @@ public:
 	// Verifica correspondencia de letra ou palavra
 	int play(string word)
 	{
-		if (check(word))  // Se houve correspondência a palavra ou letra
+		if (check(word))								   // Se houve correspondência a palavra ou letra
 			return wordSecret == wordShown ? WON : INGAME; // Retorna se ganhou ou continua em jogo
 		else
 		{
@@ -206,7 +206,7 @@ public:
 				if (s[0] == wordSecret[i])
 				{
 					wordShown[i] = s[0]; // Substituiu na palavra mostrada as letras corretas
-					found = true; // Tem letra na palavra
+					found = true;		 // Tem letra na palavra
 				}
 			}
 			return found;
@@ -240,11 +240,11 @@ ServerData convertToChatBuffer(string msg)
 }
 
 // Converte gameStatus para string
-string resGame(int gameStatus)
+string resGameToString(int gameStatus)
 {
-	if (gameStatus == -1)
+	if (gameStatus == LOST)
 		return "Perdeu";
-	else if (gameStatus == 1)
+	else if (gameStatus == WON)
 		return "Ganhou";
 	else
 		return "";
@@ -268,9 +268,9 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	thdata anotherPlayer;  // Dados do outro jogador
 
 	int whoIsPlaying = rand() % 2; // Controle do jogador atual, primeiro a jogar é randomizado
-	int gameStatus = INGAME;			   // Status do jogo: 0 = continua, 1 = ganhou, -1 = perdeu
+	int gameStatus = INGAME;	   // Status do jogo: 0 = continua, 1 = ganhou, -1 = perdeu
 
-	ServerData sendData;		   // Dados envio servidor -> cliente
+	ServerData sendData; // Dados envio servidor -> cliente
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
 
@@ -280,7 +280,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		currentPlayer = (whoIsPlaying == 0) ? player1 : player2;
 		anotherPlayer = (whoIsPlaying == 0) ? player2 : player1;
 
-		cout << "Jogador Atual: " << currentPlayer.thread_no << endl;
+		cout << "Jogador Atual: " << currentPlayer.thread_no + 1 << endl;
 
 		// Mostrar palavra atualizada para todos
 		string wordShown = game.getWordShown(); // Captura mensagem escondida
@@ -310,9 +310,8 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		// Verifica vencedor ou perdedor
 		if (gameStatus == LOST || gameStatus == WON)
 		{
-			cout << "Fim de jogo\n"
-				 << endl;
-			cout << "Jogador " << (currentPlayer.thread_no + 1) << " " << resGame(gameStatus) << endl;
+			cout << "Fim de jogo\n" << endl;
+			cout << "Jogador " << (currentPlayer.thread_no + 1) << " " << resGameToString(gameStatus) << endl;
 			sendData.flag = (gameStatus == 1) ? WINNER : LOSER; // Define o flag de acordo com o resultado
 			strcpy(sendData.shownWord, wordShown.c_str());
 			for (int i = 0; i < NUM_THREADS; i++)
@@ -330,7 +329,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		cout << "Alternando o jogador: " << whoIsPlaying << endl;
 	}
 
-	cout << "Status: " << resGame(gameStatus) << endl;
+	cout << "Status: " << resGameToString(gameStatus) << endl;
 	cout << "Fim de jogo\n"
 		 << endl;
 	inACurrentGame = false;					  // Indica que não existe um jogo em andamento
@@ -397,14 +396,18 @@ void *lobby(void *param)
 	{
 		// Envia mensagem para o jogador 0 escolher a dificuldade
 		cout << "Enviando mensagem para jogador escolher dificuldade" << endl;
-		sendData = convertToChatBuffer("Escolha a dificuldade para o jogo\n");
-		send(data->sock, &sendData, sizeof(ServerData), 0);
-
 		// Recebe a dificuldade escolhida pelo jogador 0
+		string difficulty = "";
 		ClientData cData;
-		recv(data->sock, &cData, sizeof(ClientData), 0);
-		cout << convertCharToString(cData.buffer);
-		string difficulty = convertCharToString(cData.buffer);
+		while (difficulty != "facil" && difficulty != "medio" && difficulty != "dificil")
+		{
+			sendData = convertToChatBuffer("Escolha a dificuldade para o jogo\n");
+			send(data->sock, &sendData, sizeof(ServerData), 0);
+			recv(data->sock, &cData, sizeof(ClientData), 0);
+			cout << convertCharToString(cData.buffer);
+			difficulty = convertCharToString(cData.buffer);
+		}
+
 		cout << "Dificuldade escolhida: " << difficulty << endl;
 
 		// Cria jogo com a dificuldade escolhida
