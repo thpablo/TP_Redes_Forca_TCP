@@ -175,38 +175,37 @@ public:
 	}
 
 	// Verifica se ganhou
-	bool win()
+	int win()
 	{
-		return (wordSecret == wordShown);
+		return WON;
 	}
 
-	// Joga com a palavra ou letra e decide se ganhou ou perdeu
+	// Verifica correspondencia de letra ou palavra
 	int play(string word)
 	{
 		if (check(word))  // Se houve correspondência a palavra ou letra
-			return win(); // Retorna se ganhou
+			return wordSecret == wordShown ? WON : INGAME; // Retorna se ganhou ou continua em jogo
 		else
 		{
 			drawPartsOfHangman(); // Desenha partes do corpo
 			// Verifica se houve erros máximos
 			if (contError == maxError)
-				return -1; // Perde, fim de jogo
+				return LOST; // Perde, fim de jogo
 		}
-		return false; // Não ganha, mas continua jogando
+		return INGAME; // Não ganha, mas continua jogando
 	}
 
 	// Verifica se contém letra ou é a palavra
 	bool check(string s)
 	{
 		bool found = false;
-
 		if (s.size() == 1)
 		{ // Verifica letra
 			for (long unsigned int i = 0; i < wordSecret.size(); i++)
 			{
 				if (s[0] == wordSecret[i])
 				{
-					wordShown[i] = s[0];
+					wordShown[i] = s[0]; // Substituiu na palavra mostrada as letras corretas
 					found = true; // Tem letra na palavra
 				}
 			}
@@ -269,12 +268,13 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	thdata anotherPlayer;  // Dados do outro jogador
 
 	int whoIsPlaying = rand() % 2; // Controle do jogador atual, primeiro a jogar é randomizado
-	int gameStatus = 0;			   // Status do jogo
+	int gameStatus = INGAME;			   // Status do jogo: 0 = continua, 1 = ganhou, -1 = perdeu
+
 	ServerData sendData;		   // Dados envio servidor -> cliente
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
 
-	while (gameStatus != -1 && gameStatus != 1)
+	while (gameStatus == INGAME)
 	{
 		// decide quem é o jogador atual
 		currentPlayer = (whoIsPlaying == 0) ? player1 : player2;
@@ -308,7 +308,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		gameStatus = game.play(input);
 		cout << "Game Status: " << gameStatus << endl;
 		// Verifica vencedor ou perdedor
-		if (gameStatus == -1 || gameStatus == 1)
+		if (gameStatus == LOST || gameStatus == WON)
 		{
 			cout << "Fim de jogo\n"
 				 << endl;

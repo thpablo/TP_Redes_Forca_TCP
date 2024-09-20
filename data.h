@@ -3,6 +3,7 @@
 
 typedef enum{CHAT, GUESS}ClientDataType;
 typedef enum{RIGHT, WRONG, WINNER, LOSER, INPUT}FlagType;
+typedef enum{INGAME, LOST, WON}GameStatus;
 
 //dados do cliente ao server
 typedef struct{
