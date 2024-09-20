@@ -1,6 +1,17 @@
+#include <stdio.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <pthread.h>    /* POSIX Threads */ 
+#include <stdlib.h>
+
+#include <fcntl.h> // for open
+#include <unistd.h> // for close
+#include <arpa/inet.h>    // htons(), inet_addr()
+#include <sys/types.h>    // AF_INET, SOCK_STREAM
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include"data.h"
+#include"connectWorkaround.h"
 
 
 
@@ -24,15 +35,15 @@ MainWindow::~MainWindow()
 void MainWindow::connectSignalsAndSlots(){
     //     QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, [=](){
     //     QString gameText = ui->enterGameGuess->text();  // Obtém o texto do QLineEdit
-    //     QMessageBox::information(nullptr, "Texto", "O texto digitado é: " + gameText);
+    //     //QMessageBox::information(nullptr, "Texto", "O texto digitado é: " + gameText);
     // });
     //     QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, [=]() {
     //     QString chatText = ui->ChatEntry->text();  // Obtém o texto do QLineEdit
     // });
         QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, this, &MainWindow::sendGameMessage);
         QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, this, &MainWindow::sendChatMessage);
-        QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, ui->enterGameGuess, qOverload<>(&QLineEdit::clear));
-        QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, ui->ChatEntry, qOverload<>(&QLineEdit::clear));
+        //QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, ui->enterGameGuess, qOverload<>(&QLineEdit::clear));
+        //QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, ui->ChatEntry, qOverload<>(&QLineEdit::clear));
 }
 
 void* MainWindow::ReceiveMessage(void *param){
@@ -50,9 +61,21 @@ void* MainWindow::ReceiveMessage(void *param){
 
   while (mainWindow->sData.flag != WINNER && mainWindow->sData.flag != LOSER){
     recv(mainWindow->dataRecv.sock, &mainWindow->sData, sizeof(ServerData), 0);
+    if(mainWindow->sData.flag == WINNER || mainWindow->sData.flag == LOSER){
+      break;
+    }
+    
+    else if(mainWindow->sData.flag == RIGHT){
+      //som de certo
+      
+    }
+    else if(mainWindow->sData.flag == WRONG){
+      //som de errado
+      
+    }
     if(mainWindow->sData.isAMessageFromServer == 1){
         QString chatString = QString(mainWindow->sData.chatBuffer);
-        mainWindow->ui->chatLogs->append(chatString);
+        mainWindow->ui->ServerMessages->setText(chatString);
       //printf("%s\n",data->sData->chatBuffer);//metadados
     }
     else{
@@ -61,6 +84,7 @@ void* MainWindow::ReceiveMessage(void *param){
       //printf("Palavra: %s\n",data->sData->shownWord);//chat
     } 
   }
+  //função de vitória/derrota
   printf("Fim de Jogo\n");
 
   return nullptr;
@@ -69,8 +93,11 @@ void* MainWindow::ReceiveMessage(void *param){
 
 void MainWindow::sendGameMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
-    cData.type = GAME;
-    strcpy(cData.buffer, gameText.toUtf8());
+    cData.type = GUESS;
+    QString qText = ui->enterGameGuess->text();
+    ui->enterGameGuess->clear();
+    QByteArray byteArray = qText.toUtf8();
+    strcpy(cData.buffer, byteArray.constData());
 
     send(dataSend.sock,&cData,sizeof(ClientData),0);
 
@@ -80,7 +107,10 @@ void MainWindow::sendGameMessage(){
 void MainWindow::sendChatMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     cData.type = CHAT;
-    strcpy(cData.buffer, chatText.toUtf8());
+    QString qText = ui->ChatEntry->text();
+    ui->ChatEntry->clear();
+    QByteArray byteArray = qText.toUtf8();
+    strcpy(cData.buffer, byteArray.constData());
     send(dataSend.sock,&cData,sizeof(ClientData),0);
 }
 

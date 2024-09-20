@@ -46,7 +46,7 @@ pthread_cond_t cond_has_a_game = PTHREAD_COND_INITIALIZER;	// Mutex para espera 
 
 typedef struct str_thdata
 {
-	int thread_no;
+	int thread;
 	int sock;
 } thdata;
 
@@ -280,7 +280,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		currentPlayer = (whoIsPlaying == 0) ? player1 : player2;
 		anotherPlayer = (whoIsPlaying == 0) ? player2 : player1;
 
-		cout << "Jogador Atual: " << currentPlayer.thread_no + 1 << endl;
+		cout << "Jogador Atual: " << currentPlayer.thread + 1 << endl;
 
 		// Mostrar palavra atualizada para todos
 		string wordShown = game.getWordShown(); // Captura mensagem escondida
@@ -311,7 +311,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		if (gameStatus == LOST || gameStatus == WON)
 		{
 			cout << "Fim de jogo\n" << endl;
-			cout << "Jogador " << (currentPlayer.thread_no + 1) << " " << resGameToString(gameStatus) << endl;
+			cout << "Jogador " << (currentPlayer.thread + 1) << " " << resGameToString(gameStatus) << endl;
 			sendData.flag = (gameStatus == 1) ? WINNER : LOSER; // Define o flag de acordo com o resultado
 			strcpy(sendData.shownWord, wordShown.c_str());
 			for (int i = 0; i < NUM_THREADS; i++)
@@ -345,11 +345,11 @@ void *lobby(void *param)
 	Hangman game;
 
 	pthread_mutex_lock(&mutex);
-	playersData[data->thread_no] = *(data);
+	playersData[data->thread] = *(data);
 	pthread_mutex_unlock(&mutex);
 
 	// Envia número da thread para o jogador
-	sendData = convertToChatBuffer("Você é o jogador " + to_string(data->thread_no + 1));
+	sendData = convertToChatBuffer("Você é o jogador " + to_string(data->thread + 1));
 	send(data->sock, &sendData, sizeof(ServerData), 0);
 
 	// Espera dois jogadores se conectarem
@@ -373,7 +373,7 @@ void *lobby(void *param)
 	}
 	*/
 
-	cout << "Jogador " << (data->thread_no + 1) << " conectado. Iniciando jogo..." << endl;
+	cout << "Jogador " << (data->thread + 1) << " conectado. Iniciando jogo..." << endl;
 
 	// Randomiza a escolha do jogador que escolhe a dificuldade
 	pthread_mutex_lock(&mutex);
@@ -387,12 +387,12 @@ void *lobby(void *param)
 
 	// Escolhe a dificuldade
 	pthread_mutex_lock(&mutex);
-	if ((data->thread_no % 2) != playerChooseDifficulty)
+	if ((data->thread % 2) != playerChooseDifficulty)
 	{
 		pthread_cond_wait(&cond_two_players, &mutex); // Espera o outro jogador escolher a dificuldade
 	}
 
-	else if ((data->thread_no % 2) == playerChooseDifficulty)
+	else if ((data->thread % 2) == playerChooseDifficulty)
 	{
 		// Envia mensagem para o jogador 0 escolher a dificuldade
 		cout << "Enviando mensagem para jogador escolher dificuldade" << endl;
@@ -404,6 +404,7 @@ void *lobby(void *param)
 			sendData = convertToChatBuffer("Escolha a dificuldade para o jogo\n");
 			send(data->sock, &sendData, sizeof(ServerData), 0);
 			recv(data->sock, &cData, sizeof(ClientData), 0);
+			printf("%s\n", cData.buffer);
 			cout << convertCharToString(cData.buffer);
 			difficulty = convertCharToString(cData.buffer);
 		}
@@ -479,7 +480,7 @@ int main()
 
 		pthread_mutex_lock(&mutex);
 		socketsThreadsIds[i] = newSocket; // newSocket é um ID gerado pelo sistema operacional
-		data[i].thread_no = i;
+		data[i].thread = i;
 		data[i].sock = newSocket;
 
 		connectedPlayers++;

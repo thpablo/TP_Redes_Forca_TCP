@@ -2,4 +2,4 @@
 ChatClient
 ChatServer
 serverbackup
-**/*.Identifier
+**/*:Zone.Identifier
