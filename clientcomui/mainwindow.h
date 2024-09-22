@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSound>
 #include<string>
 #include"../data.h"
 
@@ -25,6 +26,8 @@ ServerData sData;
 void connectSignalsAndSlots();
 void connectServer();
 static void* ReceiveMessage(void *param);
+void playSound(int type);
+void refresh();
 public:
     
     MainWindow(QWidget *parent = nullptr);

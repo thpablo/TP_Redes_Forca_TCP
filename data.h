@@ -3,7 +3,7 @@
 #include<pthread.h>
 
 enum{CHAT, GUESS};
-enum{RIGHT, WRONG, WINNER, LOSER, INPUT};
+enum{RIGHT, WRONG, WINNER, LOSER, NOTHING};
 enum{INGAME, LOST, WON};
 
 //dados do cliente ao server
@@ -16,10 +16,10 @@ typedef struct{
 typedef struct{
     char chatBuffer[1024];
     char shownWord[100];
+    char wrongLetters[100]; //string com todas as palavras erradas até o momento
     int isAMessageFromServer; // 0 = Printa palavra escondida, 1 = Printa buffer do chat
-    int flag;
-    char wrongLetters[100];
-    int yourTurn;
+    int flag; //RIGHT, WRONG, WINNER, LOSER, NOTHING
+    int yourTurn; // BOOL
 
 }ServerData;
 

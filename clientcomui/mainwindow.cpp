@@ -61,18 +61,13 @@ void* MainWindow::ReceiveMessage(void *param){
 
   while (mainWindow->sData.flag != WINNER && mainWindow->sData.flag != LOSER){
     recv(mainWindow->dataRecv.sock, &mainWindow->sData, sizeof(ServerData), 0);
+
+    mainWindow->playSound(mainWindow->sData.flag);//toca o som dependendo
+
     if(mainWindow->sData.flag == WINNER || mainWindow->sData.flag == LOSER){
       break;
     }
-    
-    else if(mainWindow->sData.flag == RIGHT){
-      //som de certo
-      
-    }
-    else if(mainWindow->sData.flag == WRONG){
-      //som de errado
-      
-    }
+
     if(mainWindow->sData.isAMessageFromServer == 1){
         QString chatString = QString(mainWindow->sData.chatBuffer);
         mainWindow->ui->ServerMessages->setText(chatString);
@@ -159,3 +154,39 @@ void MainWindow::connectServer(){
 // std::string MainWindow::getChatText(){
 //     return chatText.toStdString();
 // }
+
+void MainWindow::playSound(int type){
+  switch (type)
+  {
+  case RIGHT:
+    QSound::play("sfx/right.wav");
+    break;
+  case WRONG:
+    QSound::play("sfx/wrong.wav");
+    break;
+  case WINNER:
+    QSound::play("sfx/victory.wav");
+    break;
+  case LOSER:
+    QSound::play("sfx/loser.wav");
+    break;
+  default:
+    break;
+  }
+}
+
+void MainWindow::refresh(){
+  if (sData.yourTurn == 0) {
+      ui->enterGameGuess->setReadOnly(true);  // Impede a escrita
+      ui->ServerMessages->setText("Vez do adversário");
+   }
+
+  else{
+      ui->enterGameGuess->(false); // Libera a escrita
+      ui->ServerMessages->setText("Sua vez");
+  }
+  //QString chatString = QString(mainWindow->sData.shownWord);
+  ui->Palavra->setText(QString(sData.shownWord));
+  ui->
+
+}

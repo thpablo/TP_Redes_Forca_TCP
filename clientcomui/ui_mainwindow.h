@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created by: Qt User Interface Compiler version 6.2.4
+** Created by: Qt User Interface Compiler version 6.7.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -29,7 +29,7 @@ public:
     QLineEdit *enterGameGuess;
     QGraphicsView *HangmanImage;
     QTextEdit *chatLogs;
-    QTextEdit *textEdit;
+    QTextEdit *wrongLetters;
     QLabel *labelWrongLetters;
     QLineEdit *ChatEntry;
     QLineEdit *Palavra;
@@ -41,38 +41,38 @@ public:
     void setupUi(QMainWindow *MainWindow)
     {
         if (MainWindow->objectName().isEmpty())
-            MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
+            MainWindow->setObjectName("MainWindow");
         MainWindow->resize(1097, 644);
         centralwidget = new QWidget(MainWindow);
-        centralwidget->setObjectName(QString::fromUtf8("centralwidget"));
+        centralwidget->setObjectName("centralwidget");
         enterGameGuess = new QLineEdit(centralwidget);
-        enterGameGuess->setObjectName(QString::fromUtf8("enterGameGuess"));
+        enterGameGuess->setObjectName("enterGameGuess");
         enterGameGuess->setGeometry(QRect(50, 550, 551, 31));
         HangmanImage = new QGraphicsView(centralwidget);
-        HangmanImage->setObjectName(QString::fromUtf8("HangmanImage"));
+        HangmanImage->setObjectName("HangmanImage");
         HangmanImage->setGeometry(QRect(20, 190, 341, 271));
         HangmanImage->setStyleSheet(QString::fromUtf8("background: transparent; border: none;"));
         HangmanImage->setInteractive(false);
         chatLogs = new QTextEdit(centralwidget);
-        chatLogs->setObjectName(QString::fromUtf8("chatLogs"));
+        chatLogs->setObjectName("chatLogs");
         chatLogs->setGeometry(QRect(720, 0, 371, 521));
         chatLogs->setReadOnly(true);
-        textEdit = new QTextEdit(centralwidget);
-        textEdit->setObjectName(QString::fromUtf8("textEdit"));
-        textEdit->setGeometry(QRect(390, 260, 291, 81));
-        textEdit->setStyleSheet(QString::fromUtf8("background: transparent; border: none;\n"
+        wrongLetters = new QTextEdit(centralwidget);
+        wrongLetters->setObjectName("wrongLetters");
+        wrongLetters->setGeometry(QRect(390, 260, 291, 81));
+        wrongLetters->setStyleSheet(QString::fromUtf8("background: transparent; border: none;\n"
 "font: 14pt \"Sans Serif\";"));
-        textEdit->setLineWrapMode(QTextEdit::LineWrapMode::NoWrap);
-        textEdit->setReadOnly(true);
+        wrongLetters->setLineWrapMode(QTextEdit::LineWrapMode::NoWrap);
+        wrongLetters->setReadOnly(true);
         labelWrongLetters = new QLabel(centralwidget);
-        labelWrongLetters->setObjectName(QString::fromUtf8("labelWrongLetters"));
+        labelWrongLetters->setObjectName("labelWrongLetters");
         labelWrongLetters->setGeometry(QRect(420, 230, 211, 31));
         labelWrongLetters->setStyleSheet(QString::fromUtf8("font: 22pt \"Sans Serif\";"));
         ChatEntry = new QLineEdit(centralwidget);
-        ChatEntry->setObjectName(QString::fromUtf8("ChatEntry"));
+        ChatEntry->setObjectName("ChatEntry");
         ChatEntry->setGeometry(QRect(720, 540, 371, 61));
         Palavra = new QLineEdit(centralwidget);
-        Palavra->setObjectName(QString::fromUtf8("Palavra"));
+        Palavra->setObjectName("Palavra");
         Palavra->setGeometry(QRect(90, 90, 541, 81));
         QPalette palette;
         QBrush brush(QColor(0, 0, 0, 0));
@@ -93,23 +93,23 @@ public:
         Palavra->setAlignment(Qt::AlignmentFlag::AlignCenter);
         Palavra->setReadOnly(true);
         ServerMessages = new QLineEdit(centralwidget);
-        ServerMessages->setObjectName(QString::fromUtf8("ServerMessages"));
+        ServerMessages->setObjectName("ServerMessages");
         ServerMessages->setGeometry(QRect(50, 520, 551, 31));
         ServerMessages->setStyleSheet(QString::fromUtf8("background: transparent; border: none;\n"
 "font: 14pt \"Sans Serif\";"));
         ServerMessages->setReadOnly(true);
         labelWord = new QLabel(centralwidget);
-        labelWord->setObjectName(QString::fromUtf8("labelWord"));
+        labelWord->setObjectName("labelWord");
         labelWord->setGeometry(QRect(260, 70, 211, 31));
         labelWord->setStyleSheet(QString::fromUtf8("font: 22pt \"Sans Serif\";"));
         labelWord->setAlignment(Qt::AlignmentFlag::AlignCenter);
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
-        menubar->setObjectName(QString::fromUtf8("menubar"));
+        menubar->setObjectName("menubar");
         menubar->setGeometry(QRect(0, 0, 1097, 19));
         MainWindow->setMenuBar(menubar);
         statusbar = new QStatusBar(MainWindow);
-        statusbar->setObjectName(QString::fromUtf8("statusbar"));
+        statusbar->setObjectName("statusbar");
         MainWindow->setStatusBar(statusbar);
 
         retranslateUi(MainWindow);
@@ -130,7 +130,7 @@ public:
 "li.checked::marker { content: \"\\2612\"; }\n"
 "</style></head><body style=\" font-family:'Sans Serif'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>", nullptr));
-        textEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "A - B - C- D - E - F- G - H - I - J - K - L - M - N - O - P - Q - R - S - T - U - V - W - X - Y - Z", nullptr));
+        wrongLetters->setPlaceholderText(QCoreApplication::translate("MainWindow", "A - B - C- D - E - F- G - H - I - J - K - L - M - N - O - P - Q - R - S - T - U - V - W - X - Y - Z", nullptr));
         labelWrongLetters->setText(QCoreApplication::translate("MainWindow", "Letras Erradas", nullptr));
         ChatEntry->setText(QString());
         Palavra->setPlaceholderText(QCoreApplication::translate("MainWindow", "PALAVRA", nullptr));

@@ -6,6 +6,7 @@ TEMPLATE = app
 TARGET = Hangman
 INCLUDEPATH += .
 QT += widgets
+QT += multimedia
 
 
 # You can make your code fail to compile if you use deprecated APIs.
