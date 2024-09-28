@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QSound>
 #include<string>
 #include"../data.h"
 
@@ -18,10 +17,12 @@ class MainWindow : public QMainWindow
 
 QString gameText, chatText; //input do usuário
 QString hiddenWord, chatLog, wrongLetters;//output para o usuário
+QString name;
 
 thdata dataRecv, dataSend;
 ClientData cData;
 ServerData sData;
+
 
 void connectSignalsAndSlots();
 void connectServer();
@@ -32,8 +33,9 @@ public:
     
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-    std::string getGameText();
-    std::string getChatText();
+    void setName(const QString &text){
+        name = text;
+    }
 
 // private slots:
 //     void on_enterGameGuess_returnPressed();

@@ -26,9 +26,10 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    pthread_join(dataSend.thread, NULL);
+    pthread_cancel(dataRecv.thread);
     shutdown(dataRecv.sock, 2);
-    shutdown(dataSend.sock, 2);
+    sleep(2);
+    //shutdown(dataSend.sock, 2);
     delete ui;
 }
 
@@ -62,7 +63,7 @@ void* MainWindow::ReceiveMessage(void *param){
   while (mainWindow->sData.flag != WINNER && mainWindow->sData.flag != LOSER){
     recv(mainWindow->dataRecv.sock, &mainWindow->sData, sizeof(ServerData), 0);
 
-    mainWindow->playSound(mainWindow->sData.flag);//toca o som dependendo
+    //mainWindow->playSound(mainWindow->sData.flag);//toca o som dependendo
 
     if(mainWindow->sData.flag == WINNER || mainWindow->sData.flag == LOSER){
       break;
@@ -99,10 +100,21 @@ void MainWindow::sendGameMessage(){
 }
 
 
+// void MainWindow::sendChatMessage(){
+//     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
+//     cData.type = CHAT;
+//     QString qText = ui->ChatEntry->text();
+//     ui->ChatEntry->clear();
+//     QByteArray byteArray = qText.toUtf8();
+//     strcpy(cData.buffer, byteArray.constData());
+//     send(dataSend.sock,&cData,sizeof(ClientData),0);
+// }
+
 void MainWindow::sendChatMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     cData.type = CHAT;
-    QString qText = ui->ChatEntry->text();
+    chatLog.append("Você: " + ui->ChatEntry->text());
+    QString qText = name + ": " + ui->ChatEntry->text();
     ui->ChatEntry->clear();
     QByteArray byteArray = qText.toUtf8();
     strcpy(cData.buffer, byteArray.constData());
@@ -155,25 +167,25 @@ void MainWindow::connectServer(){
 //     return chatText.toStdString();
 // }
 
-void MainWindow::playSound(int type){
-  switch (type)
-  {
-  case RIGHT:
-    QSound::play("sfx/right.wav");
-    break;
-  case WRONG:
-    QSound::play("sfx/wrong.wav");
-    break;
-  case WINNER:
-    QSound::play("sfx/victory.wav");
-    break;
-  case LOSER:
-    QSound::play("sfx/loser.wav");
-    break;
-  default:
-    break;
-  }
-}
+// void MainWindow::playSound(int type){ reativar quando resolver soum
+//   switch (type)
+//   {
+//   case RIGHT:
+//     QSound::play("sfx/right.wav");
+//     break;
+//   case WRONG:
+//     QSound::play("sfx/wrong.wav");
+//     break;
+//   case WINNER:
+//     QSound::play("sfx/victory.wav");
+//     break;
+//   case LOSER:
+//     QSound::play("sfx/loser.wav");
+//     break;
+//   default:
+//     break;
+//   }
+// }
 
 void MainWindow::refresh(){
   if (sData.yourTurn == 0) {
@@ -182,11 +194,11 @@ void MainWindow::refresh(){
    }
 
   else{
-      ui->enterGameGuess->(false); // Libera a escrita
+      ui->enterGameGuess->setReadOnly(false); // Libera a escrita
       ui->ServerMessages->setText("Sua vez");
   }
   //QString chatString = QString(mainWindow->sData.shownWord);
   ui->Palavra->setText(QString(sData.shownWord));
-  ui->
+  ui->wrongLetters->setText(QString(sData.wrongLetters));
 
 }

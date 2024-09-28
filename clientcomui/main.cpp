@@ -1,7 +1,25 @@
 #include "mainwindow.h"
-
+#include "loginDialogBox.h"
 #include <QApplication>
 
+
+
+int main(int argc, char *argv[])
+{   
+    QApplication a(argc, argv);
+    MainWindow mw;
+    LoginDialog lw;
+    lw.show();
+    
+    QObject::connect(&lw, &LoginDialog::textSent, &mw, &MainWindow::setName);
+
+    QObject::connect(&lw, &QDialog::accepted, [&]() {
+        mw.show();  // Mostra a nova janela
+    });
+    
+    
+    return a.exec();
+}
 
 // #include <stdio.h>
 // #include <sys/socket.h>
@@ -219,14 +237,3 @@
 
 
 
-
-int main(int argc, char *argv[])
-{   
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-
-    printf("ssssssssss");
-    
-    return a.exec();
-}
