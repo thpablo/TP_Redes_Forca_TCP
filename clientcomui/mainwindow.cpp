@@ -72,8 +72,8 @@ while (gameData.flag != WINNER && gameData.flag != LOSER && mainWindow->kill != 
         // shutdown(mainWindow->dataRecv.sock, 2);
         // pthread_exit(nullptr);  // Encerrar a thread de recebimento
         // return nullptr;
-        pthread_cancel(mainWindow->thDataGame.thread);
         sleep(5);
+        pthread_cancel(mainWindow->thDataGame.thread);
         shutdown(mainWindow->thDataGame.sock, 2);
         pthread_exit(NULL);
     }
@@ -94,8 +94,8 @@ while (gameData.flag != WINNER && gameData.flag != LOSER && mainWindow->kill != 
 }
 //função de vitória/derrota
     printf("Fim de Jogo\n");
-    pthread_cancel(mainWindow->thDataGame.thread);
     sleep(5);
+    pthread_cancel(mainWindow->thDataGame.thread);
     shutdown(mainWindow->thDataGame.sock, 2);
     pthread_exit(NULL);
 
@@ -136,26 +136,15 @@ void MainWindow::sendGameMessage(){
 
 }
 
-
-// void MainWindow::sendChatMessage(){
-//     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
-//     cData.type = CHAT;
-//     QString qText = ui->ChatEntry->text();
-//     ui->ChatEntry->clear();
-//     QByteArray byteArray = qText.toUtf8();
-//     strcpy(cData.buffer, byteArray.constData());
-//     send(dataSend.sock,&cData,sizeof(ClientData),0);
-// }
-
 void MainWindow::sendChatMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
-    cData.type = CHAT;
-    chatLog.append("Você: " + ui->ChatEntry->text());
+    emit newChatMessageReceived("Você: " + ui->ChatEntry->text());
     QString qText = name + ": " + ui->ChatEntry->text();
     ui->ChatEntry->clear();
+    char buffer[1024];
     QByteArray byteArray = qText.toUtf8();
-    strcpy(cData.buffer, byteArray.constData());
-    send(thDataChat.sock,&cData,sizeof(ClientData),0);
+    strcpy(buffer, byteArray.constData());
+    send(thDataChat.sock, buffer ,sizeof(buffer),0);
 }
 
 void MainWindow::connectServer(){
@@ -244,8 +233,11 @@ void MainWindow::refreshGame(const ServerData gameData){
         ui->ServerMessages->setText("Sua vez");
     }
     //QString chatString = QString(mainWindow->gameData.shownWord);
-    ui->Palavra->setText(QString(gameData.shownWord));
-    ui->wrongLetters->setText(QString(gameData.wrongLetters));
+    ui->Palavra->setText(QString(gameData.shownWord).toUpper());
+
+
+   
+    ui->wrongLetters->setText(QString(gameData.wrongLetters).toUpper());
     }
 
     void MainWindow::appendChatMessage(const QString &message){

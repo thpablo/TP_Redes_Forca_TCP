@@ -29,6 +29,7 @@
 
 #include <cstring> // Para std::strcpy
 #include "data.h"
+#include "chat.h"
 
 using namespace std;
 
@@ -283,6 +284,9 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
 
+	pthread_t chatThread;
+	pthread_create(&chatThread, NULL, &chatMain, NULL);
+
 	while (gameStatus != WINNER && gameStatus != LOSER)
 	{
 		// decide quem é o jogador atual
@@ -349,6 +353,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	cout << "Status: " << resGameToString(gameStatus) << endl;
 	cout << "Fim de jogo\n"
 		 << endl;
+	pthread_join(chatThread, nullptr);
 	inACurrentGame = false;					  // Indica que não existe um jogo em andamento
 	pthread_cond_broadcast(&cond_has_a_game); // Acorda todas as threads para que possam jogar
 }
@@ -526,4 +531,8 @@ int main()
 	pthread_mutex_destroy(&mutex);
 
 	return 0;
+}
+
+void* chatConexao(void* param){
+	
 }

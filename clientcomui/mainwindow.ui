@@ -77,7 +77,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
     </property>
     <property name="styleSheet">
      <string notr="true">background: transparent; border: none;
-font: 14pt &quot;Sans Serif&quot;;</string>
+font: 700 14pt &quot;Liberation Sans&quot;;</string>
     </property>
     <property name="lineWrapMode">
      <enum>QTextEdit::LineWrapMode::NoWrap</enum>

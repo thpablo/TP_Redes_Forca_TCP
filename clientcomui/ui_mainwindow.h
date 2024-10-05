@@ -61,7 +61,7 @@ public:
         wrongLetters->setObjectName("wrongLetters");
         wrongLetters->setGeometry(QRect(390, 260, 291, 81));
         wrongLetters->setStyleSheet(QString::fromUtf8("background: transparent; border: none;\n"
-"font: 14pt \"Sans Serif\";"));
+"font: 700 14pt \"Liberation Sans\";"));
         wrongLetters->setLineWrapMode(QTextEdit::LineWrapMode::NoWrap);
         wrongLetters->setReadOnly(true);
         labelWrongLetters = new QLabel(centralwidget);
