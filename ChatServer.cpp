@@ -45,11 +45,6 @@ pthread_mutex_t mutex;										// Mutex para controle de acesso a variáveis co
 pthread_cond_t cond_two_players = PTHREAD_COND_INITIALIZER; // Mutex para espera de 2 players
 pthread_cond_t cond_has_a_game = PTHREAD_COND_INITIALIZER;	// Mutex para espera de 2 players
 
-typedef struct str_thdata
-{
-	int thread;
-	int sock;
-} thdata;
 
 // Classe para o chat e contar tentativas restantes
 class Player

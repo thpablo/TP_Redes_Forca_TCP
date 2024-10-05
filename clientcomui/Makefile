@@ -37,7 +37,7 @@ MOVE          = mv -f
 TAR           = tar -cf
 COMPRESS      = gzip -9f
 DISTNAME      = client1.0.0
-DISTDIR = /root/documentos/UFOP/periodo4/Redes\ de\ Computadores/tp/TP_Redes_Forca_TCP/clientcomui/.tmp/client1.0.0
+DISTDIR = /root/documentos/UFOP/periodo4/Redes\ de\ Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui/.tmp/client1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-O1 -Wl,-rpath,/opt/Qt/6.7.2/gcc_64/lib -Wl,-rpath-link,/opt/Qt/6.7.2/gcc_64/lib
 LIBS          = $(SUBLIBS) /opt/Qt/6.7.2/gcc_64/lib/libQt6Widgets.so /opt/Qt/6.7.2/gcc_64/lib/libQt6Multimedia.so -pthread /opt/Qt/6.7.2/gcc_64/lib/libQt6Gui.so /opt/Qt/6.7.2/gcc_64/lib/libQt6Network.so /opt/Qt/6.7.2/gcc_64/lib/libQt6Core.so -lpthread -lGL   
@@ -991,7 +991,7 @@ moc_loginDialogBox.cpp: loginDialogBox.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qguiapplication_platform.h \
 		moc_predefs.h \
 		/opt/Qt/6.7.2/gcc_64/libexec/moc
-	/opt/Qt/6.7.2/gcc_64/libexec/moc $(DEFINES) --include '/root/documentos/UFOP/periodo4/Redes de Computadores/tp/TP_Redes_Forca_TCP/clientcomui/moc_predefs.h' -I/opt/Qt/6.7.2/gcc_64/mkspecs/linux-g++ -I'/root/documentos/UFOP/periodo4/Redes de Computadores/tp/TP_Redes_Forca_TCP/clientcomui' -I'/root/documentos/UFOP/periodo4/Redes de Computadores/tp/TP_Redes_Forca_TCP/clientcomui' -I/opt/Qt/6.7.2/gcc_64/include -I/opt/Qt/6.7.2/gcc_64/include/QtWidgets -I/opt/Qt/6.7.2/gcc_64/include/QtMultimedia -I/opt/Qt/6.7.2/gcc_64/include/QtGui -I/opt/Qt/6.7.2/gcc_64/include/QtNetwork -I/opt/Qt/6.7.2/gcc_64/include/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include loginDialogBox.h -o moc_loginDialogBox.cpp
+	/opt/Qt/6.7.2/gcc_64/libexec/moc $(DEFINES) --include '/root/documentos/UFOP/periodo4/Redes de Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui/moc_predefs.h' -I/opt/Qt/6.7.2/gcc_64/mkspecs/linux-g++ -I'/root/documentos/UFOP/periodo4/Redes de Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui' -I'/root/documentos/UFOP/periodo4/Redes de Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui' -I/opt/Qt/6.7.2/gcc_64/include -I/opt/Qt/6.7.2/gcc_64/include/QtWidgets -I/opt/Qt/6.7.2/gcc_64/include/QtMultimedia -I/opt/Qt/6.7.2/gcc_64/include/QtGui -I/opt/Qt/6.7.2/gcc_64/include/QtNetwork -I/opt/Qt/6.7.2/gcc_64/include/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include loginDialogBox.h -o moc_loginDialogBox.cpp
 
 moc_mainwindow.cpp: mainwindow.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/QMainWindow \
@@ -1184,7 +1184,7 @@ moc_mainwindow.cpp: mainwindow.h \
 		../data.h \
 		moc_predefs.h \
 		/opt/Qt/6.7.2/gcc_64/libexec/moc
-	/opt/Qt/6.7.2/gcc_64/libexec/moc $(DEFINES) --include '/root/documentos/UFOP/periodo4/Redes de Computadores/tp/TP_Redes_Forca_TCP/clientcomui/moc_predefs.h' -I/opt/Qt/6.7.2/gcc_64/mkspecs/linux-g++ -I'/root/documentos/UFOP/periodo4/Redes de Computadores/tp/TP_Redes_Forca_TCP/clientcomui' -I'/root/documentos/UFOP/periodo4/Redes de Computadores/tp/TP_Redes_Forca_TCP/clientcomui' -I/opt/Qt/6.7.2/gcc_64/include -I/opt/Qt/6.7.2/gcc_64/include/QtWidgets -I/opt/Qt/6.7.2/gcc_64/include/QtMultimedia -I/opt/Qt/6.7.2/gcc_64/include/QtGui -I/opt/Qt/6.7.2/gcc_64/include/QtNetwork -I/opt/Qt/6.7.2/gcc_64/include/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include mainwindow.h -o moc_mainwindow.cpp
+	/opt/Qt/6.7.2/gcc_64/libexec/moc $(DEFINES) --include '/root/documentos/UFOP/periodo4/Redes de Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui/moc_predefs.h' -I/opt/Qt/6.7.2/gcc_64/mkspecs/linux-g++ -I'/root/documentos/UFOP/periodo4/Redes de Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui' -I'/root/documentos/UFOP/periodo4/Redes de Computadores/trabalho/TP_Redes_Forca_TCP/clientcomui' -I/opt/Qt/6.7.2/gcc_64/include -I/opt/Qt/6.7.2/gcc_64/include/QtWidgets -I/opt/Qt/6.7.2/gcc_64/include/QtMultimedia -I/opt/Qt/6.7.2/gcc_64/include/QtGui -I/opt/Qt/6.7.2/gcc_64/include/QtNetwork -I/opt/Qt/6.7.2/gcc_64/include/QtCore -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include mainwindow.h -o moc_mainwindow.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -1628,10 +1628,9 @@ main.o: main.cpp mainwindow.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qapplication.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
-mainwindow.o: mainwindow.cpp mainwindow.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/QMainWindow \
-		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qmainwindow.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
+mainwindow.o: mainwindow.cpp /opt/Qt/6.7.2/gcc_64/include/QtMultimedia/QSoundEffect \
+		/opt/Qt/6.7.2/gcc_64/include/QtMultimedia/qsoundeffect.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtMultimedia/qtmultimediaglobal.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qtguiglobal.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qglobal.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qtversionchecks.h \
@@ -1679,21 +1678,14 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qversiontagging.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qtgui-config.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qtguiexports.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qtwidgets-config.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qtwidgetsexports.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qwidget.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtGui/qwindowdefs.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobjectdefs.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qnamespace.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qtmetamacros.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qfunctionaltools_impl.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobject.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstring.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qchar.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringview.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtMultimedia/qtmultimedia-config.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtMultimedia/qtmultimediaexports.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtMultimedia/qaudio.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qmetatype.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qbytearray.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qrefcount.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qnamespace.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qtmetamacros.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qarraydata.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qpair.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qarraydatapointer.h \
@@ -1706,6 +1698,16 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qbytearrayview.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringfwd.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/q20type_traits.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcompare.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcomparehelpers.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qdatastream.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qscopedpointer.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qiodevicebase.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qfloat16.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qhashfunctions.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstring.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qchar.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringview.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringliteral.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringalgorithms.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qlatin1stringview.h \
@@ -1715,29 +1717,34 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringbuilder.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringconverter.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringconverter_base.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qlist.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qhashfunctions.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qiterator.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qbytearraylist.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringlist.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qalgorithms.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringmatcher.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcoreevent.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qscopedpointer.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qmetatype.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcompare.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcomparehelpers.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qdatastream.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qiodevicebase.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qfloat16.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qmath.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qalgorithms.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qiterable.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qmetacontainer.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcontainerinfo.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qtaggedpointer.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobjectdefs.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qfunctionaltools_impl.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qscopeguard.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobject.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qlist.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qiterator.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qbytearraylist.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringlist.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qstringmatcher.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qcoreevent.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qobject_impl.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qbindingstorage.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtCore/qurl.h \
+		mainwindow.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/QMainWindow \
+		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qmainwindow.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qtwidgets-config.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qtwidgetsexports.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtWidgets/qwidget.h \
+		/opt/Qt/6.7.2/gcc_64/include/QtGui/qwindowdefs.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qmargins.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/q23utility.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qaction.h \
@@ -1780,7 +1787,6 @@ mainwindow.o: mainwindow.cpp mainwindow.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qbitmap.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qevent.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtCore/qiodevice.h \
-		/opt/Qt/6.7.2/gcc_64/include/QtCore/qurl.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qeventpoint.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qvector2d.h \
 		/opt/Qt/6.7.2/gcc_64/include/QtGui/qvectornd.h \

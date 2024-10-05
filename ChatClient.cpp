@@ -21,12 +21,6 @@ using namespace std;
 bool end_flag = 0; //quando passa a ser 1, todas as threads encerram
 int chatType = -1;
 
-typedef struct str_thdata{
-  int sock;
-  pthread_t thread;
-} thdata;
-
-
 void* threadSendChat(void *param){
   thdata *data;
   data = (thdata *)param;
