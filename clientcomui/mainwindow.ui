@@ -291,22 +291,5 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>ChatEntry</sender>
-   <signal>returnPressed()</signal>
-   <receiver>ChatEntry</receiver>
-   <slot>clear()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>905</x>
-     <y>589</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>905</x>
-     <y>589</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

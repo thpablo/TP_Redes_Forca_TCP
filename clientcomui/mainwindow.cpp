@@ -3,6 +3,7 @@
 #include <string.h>
 #include <pthread.h>    /* POSIX Threads */ 
 #include <stdlib.h>
+#include <QSoundEffect>
 
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
@@ -19,17 +20,19 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
+
     ui->setupUi(this);
+    int kill = 0;
     connectServer();
     connectSignalsAndSlots();
 }
 
 MainWindow::~MainWindow()
 {
+    int kill = 1;
     pthread_cancel(dataRecv.thread);
-    shutdown(dataRecv.sock, 2);
-    sleep(2);
-    //shutdown(dataSend.sock, 2);
+    pthread_attr_destroy(&attr);
+    
     delete ui;
 }
 
@@ -60,8 +63,15 @@ void* MainWindow::ReceiveMessage(void *param){
     exit(0);
   }
 
-  while (mainWindow->sData.flag != WINNER && mainWindow->sData.flag != LOSER){
-    recv(mainWindow->dataRecv.sock, &mainWindow->sData, sizeof(ServerData), 0);
+  while (mainWindow->sData.flag != WINNER && mainWindow->sData.flag != LOSER && mainWindow->kill != 1){
+    if(recv(mainWindow->dataRecv.sock, &mainWindow->sData, sizeof(ServerData), 0) == 0){
+        //conexão perdida
+        mainWindow->ui->ServerMessages->setText("Conexão perdida, desconectando...");
+        sleep(2);
+        shutdown(mainWindow->dataRecv.sock, 2);
+        pthread_exit(nullptr);  // Encerrar a thread de recebimento
+        return nullptr;
+    }
 
     //mainWindow->playSound(mainWindow->sData.flag);//toca o som dependendo
 
@@ -81,9 +91,9 @@ void* MainWindow::ReceiveMessage(void *param){
     } 
   }
   //função de vitória/derrota
-  printf("Fim de Jogo\n");
-
-  return nullptr;
+    printf("Fim de Jogo\n");
+    shutdown(mainWindow->dataRecv.sock, 2);
+    return nullptr;
 
 }
 
@@ -127,7 +137,6 @@ void MainWindow::connectServer(){
     socklen_t addr_size;
     pthread_t threadSendId, threadRecvId;
     //thdata dataRecv, dataSend;
-    pthread_attr_t attr;
 
 
     pthread_attr_init(&attr);
@@ -167,25 +176,32 @@ void MainWindow::connectServer(){
 //     return chatText.toStdString();
 // }
 
-// void MainWindow::playSound(int type){ reativar quando resolver soum
-//   switch (type)
-//   {
-//   case RIGHT:
-//     QSound::play("sfx/right.wav");
-//     break;
-//   case WRONG:
-//     QSound::play("sfx/wrong.wav");
-//     break;
-//   case WINNER:
-//     QSound::play("sfx/victory.wav");
-//     break;
-//   case LOSER:
-//     QSound::play("sfx/loser.wav");
-//     break;
-//   default:
-//     break;
-//   }
-// }
+
+void MainWindow::playSound(int type) {
+    QSoundEffect* soundEffect = new QSoundEffect(this); // Criar um novo QSoundEffect
+
+    switch (type) {
+    case RIGHT:
+        soundEffect->setSource(QUrl::fromLocalFile("sfx/right.wav"));
+        break;
+    case WRONG:
+        soundEffect->setSource(QUrl::fromLocalFile("sfx/wrong.wav"));
+        break;
+    case WINNER:
+        soundEffect->setSource(QUrl::fromLocalFile("sfx/victory.wav"));
+        break;
+    case LOSER:
+        soundEffect->setSource(QUrl::fromLocalFile("sfx/loser.wav"));
+        break;
+    default:
+        delete soundEffect; // Limpar se não houver som
+        return;
+    }
+
+    soundEffect->setVolume(1.0f); // Definir o volume (0.0 a 1.0)
+    soundEffect->play(); // Reproduzir o som
+}
+
 
 void MainWindow::refresh(){
   if (sData.yourTurn == 0) {

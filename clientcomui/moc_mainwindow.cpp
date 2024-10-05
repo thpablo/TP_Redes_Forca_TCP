@@ -1,48 +1,54 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mainwindow.h'
 **
-** Created by: The Qt Meta Object Compiler version 68 (Qt 6.2.4)
+** Created by: The Qt Meta Object Compiler version 68 (Qt 6.7.2)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
-#include <memory>
 #include "mainwindow.h"
-#include <QtCore/qbytearray.h>
 #include <QtCore/qmetatype.h>
+
+#include <QtCore/qtmochelpers.h>
+
+#include <memory>
+
+
+#include <QtCore/qxptype_traits.h>
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'mainwindow.h' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 68
-#error "This file was generated using the moc from 6.2.4. It"
+#error "This file was generated using the moc from 6.7.2. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
 
-QT_BEGIN_MOC_NAMESPACE
+#ifndef Q_CONSTINIT
+#define Q_CONSTINIT
+#endif
+
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
-struct qt_meta_stringdata_MainWindow_t {
-    const uint offsetsAndSize[8];
-    char stringdata0[44];
-};
-#define QT_MOC_LITERAL(ofs, len) \
-    uint(offsetof(qt_meta_stringdata_MainWindow_t, stringdata0) + ofs), len 
-static const qt_meta_stringdata_MainWindow_t qt_meta_stringdata_MainWindow = {
-    {
-QT_MOC_LITERAL(0, 10), // "MainWindow"
-QT_MOC_LITERAL(11, 15), // "sendGameMessage"
-QT_MOC_LITERAL(27, 0), // ""
-QT_MOC_LITERAL(28, 15) // "sendChatMessage"
+QT_WARNING_DISABLE_GCC("-Wuseless-cast")
+namespace {
 
-    },
-    "MainWindow\0sendGameMessage\0\0sendChatMessage"
-};
-#undef QT_MOC_LITERAL
+#ifdef QT_MOC_HAS_STRINGDATA
+struct qt_meta_stringdata_CLASSMainWindowENDCLASS_t {};
+constexpr auto qt_meta_stringdata_CLASSMainWindowENDCLASS = QtMocHelpers::stringData(
+    "MainWindow",
+    "sendGameMessage",
+    "",
+    "sendChatMessage"
+);
+#else  // !QT_MOC_HAS_STRINGDATA
+#error "qtmochelpers.h not found or too old."
+#endif // !QT_MOC_HAS_STRINGDATA
+} // unnamed namespace
 
-static const uint qt_meta_data_MainWindow[] = {
+Q_CONSTINIT static const uint qt_meta_data_CLASSMainWindowENDCLASS[] = {
 
  // content:
-      10,       // revision
+      12,       // revision
        0,       // classname
        0,    0, // classinfo
        2,   14, // methods
@@ -63,6 +69,23 @@ static const uint qt_meta_data_MainWindow[] = {
        0        // eod
 };
 
+Q_CONSTINIT const QMetaObject MainWindow::staticMetaObject = { {
+    QMetaObject::SuperData::link<QMainWindow::staticMetaObject>(),
+    qt_meta_stringdata_CLASSMainWindowENDCLASS.offsetsAndSizes,
+    qt_meta_data_CLASSMainWindowENDCLASS,
+    qt_static_metacall,
+    nullptr,
+    qt_incomplete_metaTypeArray<qt_meta_stringdata_CLASSMainWindowENDCLASS_t,
+        // Q_OBJECT / Q_GADGET
+        QtPrivate::TypeAndForceComplete<MainWindow, std::true_type>,
+        // method 'sendGameMessage'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        // method 'sendChatMessage'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>
+    >,
+    nullptr
+} };
+
 void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c == QMetaObject::InvokeMetaMethod) {
@@ -77,22 +100,6 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
     (void)_a;
 }
 
-const QMetaObject MainWindow::staticMetaObject = { {
-    QMetaObject::SuperData::link<QMainWindow::staticMetaObject>(),
-    qt_meta_stringdata_MainWindow.offsetsAndSize,
-    qt_meta_data_MainWindow,
-    qt_static_metacall,
-    nullptr,
-qt_incomplete_metaTypeArray<qt_meta_stringdata_MainWindow_t
-, QtPrivate::TypeAndForceComplete<MainWindow, std::true_type>
-, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>
-
-
->,
-    nullptr
-} };
-
-
 const QMetaObject *MainWindow::metaObject() const
 {
     return QObject::d_ptr->metaObject ? QObject::d_ptr->dynamicMetaObject() : &staticMetaObject;
@@ -101,7 +108,7 @@ const QMetaObject *MainWindow::metaObject() const
 void *MainWindow::qt_metacast(const char *_clname)
 {
     if (!_clname) return nullptr;
-    if (!strcmp(_clname, qt_meta_stringdata_MainWindow.stringdata0))
+    if (!strcmp(_clname, qt_meta_stringdata_CLASSMainWindowENDCLASS.stringdata0))
         return static_cast<void*>(this);
     return QMainWindow::qt_metacast(_clname);
 }
@@ -123,4 +130,3 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     return _id;
 }
 QT_WARNING_POP
-QT_END_MOC_NAMESPACE

@@ -5,7 +5,7 @@
 TEMPLATE = app
 TARGET = client
 INCLUDEPATH += .
-QT  += core gui widgets
+QT  += core gui widgets multimedia
 
 
 # You can make your code fail to compile if you use deprecated APIs.

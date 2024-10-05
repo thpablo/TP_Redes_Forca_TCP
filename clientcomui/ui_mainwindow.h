@@ -113,7 +113,6 @@ public:
         MainWindow->setStatusBar(statusbar);
 
         retranslateUi(MainWindow);
-        QObject::connect(ChatEntry, &QLineEdit::returnPressed, ChatEntry, qOverload<>(&QLineEdit::clear));
 
         QMetaObject::connectSlotsByName(MainWindow);
     } // setupUi

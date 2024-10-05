@@ -23,6 +23,9 @@ thdata dataRecv, dataSend;
 ClientData cData;
 ServerData sData;
 
+pthread_attr_t attr;
+
+int kill;
 
 void connectSignalsAndSlots();
 void connectServer();
