@@ -25,10 +25,12 @@ void LoginDialog::on_continueButton_clicked(){
         resultStr = "BEM VINDO";
         this->accept();
     }
-    else
-         resultStr = "NOME INVÁLIDO";
+    else{
+        resultStr = "NOME INVÁLIDO";
+        QMessageBox::information(this, "Login", resultStr, QMessageBox::Close);
 
-    QMessageBox::information(this, "Login", resultStr, QMessageBox::Close);
+    }
+
 }
 
 

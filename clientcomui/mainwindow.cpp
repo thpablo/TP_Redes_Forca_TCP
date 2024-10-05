@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->setupUi(this);
     int kill = 0;
+    gameData.flag = NOTHING;
     connectServer();
     connectSignalsAndSlots();
 }
@@ -30,9 +31,6 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     int kill = 1;
-    pthread_cancel(dataRecv.thread);
-    pthread_attr_destroy(&attr);
-    
     delete ui;
 }
 
@@ -46,16 +44,17 @@ void MainWindow::connectSignalsAndSlots(){
     // });
         QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, this, &MainWindow::sendGameMessage);
         QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, this, &MainWindow::sendChatMessage);
+        QObject::connect(this, &MainWindow::newChatMessageReceived, this, &MainWindow::appendChatMessage);
+        QObject::connect(this, &MainWindow::newGameData, this, &MainWindow::refreshGame);
         //QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, ui->enterGameGuess, qOverload<>(&QLineEdit::clear));
         //QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, ui->ChatEntry, qOverload<>(&QLineEdit::clear));
 }
 
-void* MainWindow::ReceiveMessage(void *param){
+void* ReceiveGameData(void *param){
 
   MainWindow *mainWindow;
   mainWindow = (MainWindow *) param;
  
-  char buffer[1024];
   //ServerData receivedData;
   int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
   if (s != 0) {
@@ -63,38 +62,58 @@ void* MainWindow::ReceiveMessage(void *param){
     exit(0);
   }
 
-  while (mainWindow->sData.flag != WINNER && mainWindow->sData.flag != LOSER && mainWindow->kill != 1){
-    if(recv(mainWindow->dataRecv.sock, &mainWindow->sData, sizeof(ServerData), 0) == 0){
+  while (mainWindow->gameData.flag != WINNER && mainWindow->gameData.flag != LOSER && mainWindow->kill != 1){
+    if(recv(mainWindow->thDataGame.sock, &mainWindow->gameData, sizeof(ServerData), 0) <= 0){
         //conexão perdida
-        mainWindow->ui->ServerMessages->setText("Conexão perdida, desconectando...");
-        sleep(2);
-        shutdown(mainWindow->dataRecv.sock, 2);
-        pthread_exit(nullptr);  // Encerrar a thread de recebimento
-        return nullptr;
+        emit mainWindow->newChatMessageReceived(QString("ERRO: CONEXÃO PERDIDA, DESCONECTANDO..."));
+        // sleep(2);
+        // shutdown(mainWindow->dataRecv.sock, 2);
+        // pthread_exit(nullptr);  // Encerrar a thread de recebimento
+        // return nullptr;
+        pthread_cancel(mainWindow->thDataGame.thread);
+        sleep(5);
+        shutdown(mainWindow->thDataGame.sock, 2);
+        pthread_exit(NULL);
     }
 
-    //mainWindow->playSound(mainWindow->sData.flag);//toca o som dependendo
+    emit mainWindow->newGameData(mainWindow->gameData);
 
-    if(mainWindow->sData.flag == WINNER || mainWindow->sData.flag == LOSER){
+    if(mainWindow->gameData.flag == WINNER || mainWindow->gameData.flag == LOSER){
       break;
     }
 
-    if(mainWindow->sData.isAMessageFromServer == 1){
-        QString chatString = QString(mainWindow->sData.chatBuffer);
-        mainWindow->ui->ServerMessages->setText(chatString);
-      //printf("%s\n",data->sData->chatBuffer);//metadados
-    }
-    else{
-        QString chatString = QString(mainWindow->sData.shownWord);
-        mainWindow->ui->Palavra->setText(chatString);
-      //printf("Palavra: %s\n",data->sData->shownWord);//chat
-    } 
+
   }
   //função de vitória/derrota
     printf("Fim de Jogo\n");
-    shutdown(mainWindow->dataRecv.sock, 2);
-    return nullptr;
+    pthread_cancel(mainWindow->thDataGame.thread);
+    sleep(5);
+    shutdown(mainWindow->thDataGame.sock, 2);
+    pthread_exit(NULL);
 
+}
+
+void* ReceiveChatData(void *param){
+
+  MainWindow *mainWindow;
+  mainWindow = (MainWindow *) param;
+ 
+  char buffer[1024];
+  int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+  if (s != 0) {
+    printf("Erro.");
+    exit(0);
+  }
+
+  while (1){
+    recv(mainWindow->thDataChat.sock, buffer, sizeof(buffer), 0);
+    emit mainWindow->newChatMessageReceived(QString(buffer));
+  }
+    printf("Fim de Jogo\n");
+    pthread_cancel(mainWindow->thDataGame.thread);
+    sleep(5);
+    shutdown(mainWindow->thDataGame.sock, 2);
+    pthread_exit(NULL);
 }
 
 void MainWindow::sendGameMessage(){
@@ -105,7 +124,7 @@ void MainWindow::sendGameMessage(){
     QByteArray byteArray = qText.toUtf8();
     strcpy(cData.buffer, byteArray.constData());
 
-    send(dataSend.sock,&cData,sizeof(ClientData),0);
+    send(thDataGame.sock,&cData,sizeof(ClientData),0);
 
 }
 
@@ -128,45 +147,86 @@ void MainWindow::sendChatMessage(){
     ui->ChatEntry->clear();
     QByteArray byteArray = qText.toUtf8();
     strcpy(cData.buffer, byteArray.constData());
-    send(dataSend.sock,&cData,sizeof(ClientData),0);
+    send(thDataChat.sock,&cData,sizeof(ClientData),0);
 }
 
 void MainWindow::connectServer(){
-    int clientSocket;
+    int gameSocket, chatSocket;
     struct sockaddr_in serverAddr;
     socklen_t addr_size;
-    pthread_t threadSendId, threadRecvId;
-    //thdata dataRecv, dataSend;
-
+    pthread_t threadRecvGameId, threadRecvChatId;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    clientSocket = socket(PF_INET, SOCK_STREAM, 0);
+    // Criando o socket para o jogo
+    gameSocket = socket(PF_INET, SOCK_STREAM, 0);
     
     serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(7891);
+    serverAddr.sin_port = htons(7891);  // Porta para o jogo
     serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);  
-
+    memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));  
 
     addr_size = sizeof serverAddr;
-    connect_socket(clientSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+    connect_socket(gameSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
 
+    printf("Conectando ao servidor de jogo...\n");
+    thDataGame.sock = gameSocket;  // Armazena o socket de jogo
+    thDataGame.thread = threadRecvGameId;
 
-    printf("criando thread recv...\n");
-    dataRecv.sock = clientSocket;
-    dataRecv.thread = threadRecvId;
+    // Criando thread para receber dados do jogo
+    pthread_create(&threadRecvGameId, NULL, ReceiveGameData, (void *)this);
 
+    // Criando o segundo socket para o chat
+    chatSocket = socket(PF_INET, SOCK_STREAM, 0);
+    
+    serverAddr.sin_port = htons(7892);  // Porta para o chat, diferente da porta do jogo
+    connect_socket(chatSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
 
-    pthread_create (&threadRecvId, NULL,  MainWindow::ReceiveMessage, (void *) this);
+    printf("Conectando ao servidor de chat...\n");
+    thDataChat.sock = chatSocket;  // Armazena o socket de chat
+    thDataChat.thread = threadRecvChatId;
 
-    //printf("criando thread send...\n");
-    dataSend.sock = clientSocket;
-    //dataSend.thread = threadSendId;
-    //pthread_create (&threadSendId, &attr,  &threadSend, (void *) &dataSend);
- 
+    // Criando thread para receber mensagens de chat
+    pthread_create(&threadRecvChatId, NULL, ReceiveChatData, (void *)this);
+
 }
+
+    // int clientSocket;
+    // struct sockaddr_in serverAddr;
+    // socklen_t addr_size;
+    // pthread_t threadSendId, threadRecvId;
+    // //thdata dataRecv, dataSend;
+
+
+    // pthread_attr_init(&attr);
+    // pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    // clientSocket = socket(PF_INET, SOCK_STREAM, 0);
+    
+    // serverAddr.sin_family = AF_INET;
+    // serverAddr.sin_port = htons(7891);
+    // serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);  
+
+
+    // addr_size = sizeof serverAddr;
+    // connect_socket(clientSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
+
+
+    // printf("criando thread recv...\n");
+    // dataRecv.sock = clientSocket;
+    // dataRecv.thread = threadRecvId;
+
+
+    // pthread_create (&threadRecvId, NULL,  ReceiveGameData, (void *) this);
+
+   
+    // dataSend.sock = clientSocket;
+    
+    
+ 
+
 
 
 // std::string MainWindow::getGameText(){
@@ -204,7 +264,7 @@ void MainWindow::playSound(int type) {
 
 
 void MainWindow::refresh(){
-  if (sData.yourTurn == 0) {
+  if (gameData.yourTurn == 0) {
       ui->enterGameGuess->setReadOnly(true);  // Impede a escrita
       ui->ServerMessages->setText("Vez do adversário");
    }
@@ -213,8 +273,15 @@ void MainWindow::refresh(){
       ui->enterGameGuess->setReadOnly(false); // Libera a escrita
       ui->ServerMessages->setText("Sua vez");
   }
-  //QString chatString = QString(mainWindow->sData.shownWord);
-  ui->Palavra->setText(QString(sData.shownWord));
-  ui->wrongLetters->setText(QString(sData.wrongLetters));
+  //QString chatString = QString(mainWindow->gameData.shownWord);
+  ui->Palavra->setText(QString(gameData.shownWord));
+  ui->wrongLetters->setText(QString(gameData.wrongLetters));
 
+}
+
+void MainWindow::refreshGame(const ServerData gameData){
+}
+
+void MainWindow::appendChatMessage(const QString &message){
+    ui->chatLogs->append(message);
 }

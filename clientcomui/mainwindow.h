@@ -19,9 +19,9 @@ QString gameText, chatText; //input do usuário
 QString hiddenWord, chatLog, wrongLetters;//output para o usuário
 QString name;
 
-thdata dataRecv, dataSend;
+thdata thDataGame, thDataChat;
 ClientData cData;
-ServerData sData;
+ServerData gameData;
 
 pthread_attr_t attr;
 
@@ -29,11 +29,11 @@ int kill;
 
 void connectSignalsAndSlots();
 void connectServer();
-static void* ReceiveMessage(void *param);
 void playSound(int type);
 void refresh();
 public:
-    
+    friend void* ReceiveGameData(void *param);
+    friend void* ReceiveChatData(void *param);
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     void setName(const QString &text){
@@ -43,7 +43,13 @@ public:
 // private slots:
 //     void on_enterGameGuess_returnPressed();
 
+signals:
+    void newGameData(const ServerData gameData);
+    void newChatMessageReceived(const QString &message);
+
 public slots:
+    void refreshGame(const ServerData gameData);
+    void appendChatMessage(const QString &message);
     void sendGameMessage();
     void sendChatMessage();
 
