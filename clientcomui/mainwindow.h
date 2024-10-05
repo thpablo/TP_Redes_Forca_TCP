@@ -21,7 +21,7 @@ QString name;
 
 thdata thDataGame, thDataChat;
 ClientData cData;
-ServerData gameData;
+//ServerData gameData;
 
 pthread_attr_t attr;
 

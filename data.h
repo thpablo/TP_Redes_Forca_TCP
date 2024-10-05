@@ -14,6 +14,7 @@ typedef struct{
 
 //dados enviados do server aos clientes, adicione o que for necessário
 typedef struct{
+    int wrongGuesses;
     char chatBuffer[1024];
     char shownWord[100];
     char wrongLetters[100]; //string com todas as palavras erradas até o momento

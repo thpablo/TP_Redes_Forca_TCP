@@ -52,7 +52,7 @@ class Player
 public:
 	thdata dataPlayer;
 	string name;
-	int contError; // Somador com numero de erros
+	int countError; // Somador com numero de erros
 };
 
 thdata playersData[NUM_THREADS]; // Vetor de dados dos jogadores
@@ -131,13 +131,16 @@ private:
 	string wordSecret;
 	string wordShown;
 	int maxError;
-	int contError;
+	int countError;
+	int countWrongLetters;// quantidade de tentativas de erros de única letra (usado para navegar no vetor wrongLetters)
 
 public:
+	char wrongLetters[100];
 	// Construtor público para permitir múltiplas instâncias
 	Hangman()
 	{
-		contError = 0; // Inicializando o contador de erros
+		countError = 0; // Inicializando o contador de erros
+		countWrongLetters = 0;
 	}
 
 	void createGame(string difficulty)
@@ -145,8 +148,10 @@ public:
 		wordSecret = chooseWord(difficulty); // Escolhe palavra de acordo com a dificuldade
 		cout << "Palavra secreta: " << wordSecret << endl;
 		hideWord();						  // Esconde palavra com "_"
-		maxError = wordSecret.size() + 2; // Erros máximo = tamanho da palavra + 2
+		maxError = 5; // Erros máximo = tamanho da palavra + 2
 	}
+
+	int getCountError(){return countError;}
 
 	string getWordShown()
 	{
@@ -163,11 +168,11 @@ public:
 	// Desenha partes da forca (com número máximo de erros)
 	void drawPartsOfHangman()
 	{
-		contError++;
+		countError++;
 		/*
 			Lógica para desenho
 		*/
-		std::cout << "Desenhou parte da forca. Erros: " << contError << "/" << maxError << std::endl;
+		std::cout << "Desenhou parte da forca. Erros: " << countError << "/" << maxError << std::endl;
 	}
 
 	// Verifica se ganhou
@@ -180,20 +185,21 @@ public:
 	int play(string word)
 	{
 		if (check(word))								   // Se houve correspondência a palavra ou letra
-			return wordSecret == wordShown ? WON : INGAME; // Retorna se ganhou ou continua em jogo
+			return wordSecret == wordShown ? WINNER : RIGHT; // Retorna se ganhou ou continua em jogo
 		else
 		{
 			drawPartsOfHangman(); // Desenha partes do corpo
 			// Verifica se houve erros máximos
-			if (contError == maxError)
-				return LOST; // Perde, fim de jogo
+			if (countError == maxError)
+				return LOSER; // Perde, fim de jogo
 		}
-		return INGAME; // Não ganha, mas continua jogando
+		return WRONG; // Não ganha, mas continua jogando
 	}
 
 	// Verifica se contém letra ou é a palavra
 	bool check(string s)
 	{
+		
 		bool found = false;
 		if (s.size() == 1)
 		{ // Verifica letra
@@ -204,6 +210,13 @@ public:
 					wordShown[i] = s[0]; // Substituiu na palavra mostrada as letras corretas
 					found = true;		 // Tem letra na palavra
 				}
+			}
+
+			if(!found){
+				wrongLetters[countWrongLetters*2] = s[0];
+				wrongLetters[countWrongLetters*2+1] = ' ';
+				wrongLetters[countWrongLetters*2+2] = '\0';
+				countWrongLetters++;
 			}
 			return found;
 		}
@@ -264,13 +277,13 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	thdata anotherPlayer;  // Dados do outro jogador
 
 	int whoIsPlaying = rand() % 2; // Controle do jogador atual, primeiro a jogar é randomizado
-	int gameStatus = INGAME;	   // Status do jogo: 0 = continua, 1 = ganhou, -1 = perdeu
+	int gameStatus = NOTHING;	   // Status do jogo: 0 = continua, 1 = ganhou, -1 = perdeu
 
 	ServerData sendData; // Dados envio servidor -> cliente
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
 
-	while (gameStatus == INGAME)
+	while (gameStatus != WINNER && gameStatus != LOSER)
 	{
 		// decide quem é o jogador atual
 		currentPlayer = (whoIsPlaying == 0) ? player1 : player2;
@@ -280,20 +293,25 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 
 		// Mostrar palavra atualizada para todos
 		string wordShown = game.getWordShown(); // Captura mensagem escondida
-		sendData.flag = RIGHT;
+		sendData.flag = gameStatus;
 		sendData.isAMessageFromServer = 0; // Condição para enviar a palavra escondida
 		strcpy(sendData.shownWord, wordShown.c_str());
+		strcpy(sendData.wrongLetters, game.wrongLetters);
+		sendData.wrongGuesses = game.getCountError();
+		
 
+		sendData.yourTurn = 0;
 		// Envia a palavra escondida para os dois jogadores
-		send(player1.sock, &sendData, sizeof(ServerData), 0);
-		send(player2.sock, &sendData, sizeof(ServerData), 0);
-
-		// Envia mensagem para outro jogador aguardar sua vez
-		sendData = convertToChatBuffer("Aguarde sua vez");
 		send(anotherPlayer.sock, &sendData, sizeof(ServerData), 0);
 
-		sendData = convertToChatBuffer("Sua vez");
+		sendData.flag = NOTHING;
+		sendData.yourTurn = 1;
 		send(currentPlayer.sock, &sendData, sizeof(ServerData), 0);
+
+		// Envia mensagem para outro jogador aguardar sua vez
+		//sendData = convertToChatBuffer("Aguarde sua vez");
+		
+		
 		recv(currentPlayer.sock, &cData, sizeof(ClientData), 0);
 		cout << "Mensagem recebida do cliente = " << cData.buffer << endl;
 
@@ -304,19 +322,22 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		gameStatus = game.play(input);
 		cout << "Game Status: " << gameStatus << endl;
 		// Verifica vencedor ou perdedor
-		if (gameStatus == LOST || gameStatus == WON)
+		if (gameStatus == LOSER || gameStatus == WINNER)
 		{
+			string wordShown = game.getWordShown(); // Captura mensagem escondida
+			sendData.isAMessageFromServer = 0;
+			strcpy(sendData.shownWord, wordShown.c_str());
+
+			sendData.flag = gameStatus; // Define o flag de acordo com o resultado
+			send(currentPlayer.sock, &sendData, sizeof(ServerData), 0);
+
+			sendData.flag = LOSER;
+			send(anotherPlayer.sock, &sendData, sizeof(ServerData), 0);
+
 			cout << "Fim de jogo\n" << endl;
 			cout << "Jogador " << (currentPlayer.thread + 1) << " " << resGameToString(gameStatus) << endl;
-			sendData.flag = (gameStatus == 1) ? WINNER : LOSER; // Define o flag de acordo com o resultado
-			strcpy(sendData.shownWord, wordShown.c_str());
-			for (int i = 0; i < NUM_THREADS; i++)
-			{
-				if (socketsThreadsIds[i] != -1)
-				{
-					send(socketsThreadsIds[i], &sendData, sizeof(ServerData), 0);
-				}
-			}
+			
+			
 			pthread_mutex_unlock(&mutex);
 			break; // Termina o loop se o jogo acabou
 		}
@@ -397,7 +418,7 @@ void *lobby(void *param)
 		ClientData cData;
 		while (difficulty != "facil" && difficulty != "medio" && difficulty != "dificil")
 		{
-			sendData = convertToChatBuffer("Escolha a dificuldade para o jogo\n");
+			sendData = convertToChatBuffer("Server: Escolha a dificuldade para o jogo\n");
 			send(data->sock, &sendData, sizeof(ServerData), 0);
 			recv(data->sock, &cData, sizeof(ClientData), 0);
 			printf("%s\n", cData.buffer);
