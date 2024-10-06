@@ -34,9 +34,11 @@
 using namespace std;
 
 #define NUM_THREADS 30
+#define THREADS_TUPLE 3
+
 
 /*** Teste fila */
-queue<thdata *> fila;
+queue<client_thdata *> fila;
 /******** */
 
 int socketsThreadsIds[NUM_THREADS]; // Vetor de sockets
@@ -495,116 +497,174 @@ void *lobby(void *param)
 	return nullptr;
 }
 
-int main()
+void *chatRoom(void *param)
 {
-	srand(time(NULL));
-	int welcomeSocket, newSocket;
+	PlayerPair *players = (PlayerPair *)param;
 
-	struct sockaddr_in serverAddr;
-	socklen_t addr_size;
-	pthread_t threads[NUM_THREADS];
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+	thdata *player1 = players->player1;
+	thdata *player2 = players->player2;
+	
+	char buffer[1024], *result = NULL;
+	do {
 
-	// Cria 30 structs de dados (  int thread_no; int sock;)
-	thdata data[NUM_THREADS];
+	printf("Esperando Mensagem do cliente...\n");
+	recv(player1->sock, buffer, sizeof(buffer), 0);
 
-	// Cria socket
-	welcomeSocket = socket(PF_INET, SOCK_STREAM, 0);
+	printf("Mensagem recebida do cliente = %s\n", buffer);
 
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(7891); // lembrar de alterar se necessário
-
-	// lembrar de alterar se o servidor e cliente estiverem em máquinas diferentes. Nesse caso, colocar o IP da máquina que será servidora
-	// o IP 127.0.0.1 só funciona se cliente e servidor estiverem na mesma máquina
-	serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
-
-	bind(welcomeSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-
-	pthread_mutex_init(&mutex, NULL);
-
-	// informando que o socket irá ouvir até NUM_THREADS conexões
-	// Limitar quantidade máxima de jogares em NUM_THREADS (2)
-	if (listen(welcomeSocket, NUM_THREADS) == 0)
-		printf("Listening\n");
-	else
-		printf("Error\n");
-
-	int i;
-
-	// inicializando o vetor que conterá as referências para as threads. -1 indica que não existe thread associada.
-
-	for (i = 0; i < NUM_THREADS; i++)
-	{
-		socketsThreadsIds[i] = -1;
-	}
-
-	// esperar no máximo NUM_THREADS conexões
-	i = 0;
-	while (i < NUM_THREADS)
-	{
-
-		printf("esperando conexao do cliente.... \n");
-		newSocket = accept(welcomeSocket, (struct sockaddr *)NULL, NULL);
+	if (result == NULL ){
+		printf("enviando mensagem para os demais clientes, exlcuindo o remetente....\n");
 
 		pthread_mutex_lock(&mutex);
-		socketsThreadsIds[i] = newSocket; // newSocket é um ID gerado pelo sistema operacional
-		data[i].thread = i;
-		data[i].sock = newSocket;
-
-		connectedPlayers++;
-		printf("cliente conectou.\n");
-
-		// Adiciona Fila
-		fila.push(&data[i]);
-
-		// Envia número da thread para o jogador
-		ServerData sendData = convertToChatBuffer("Você é o jogador " + to_string(data->thread + 1));
-		send(data->sock, &sendData, sizeof(ServerData), 0);
-
-		// Quando o segundo jogador conectar, todos podem prosseguir
-		if (fila.size() % 2 == 0)
-		{
-			// Desinfileira os dois jogadores
-			thdata *player1 = fila.front();
-			fila.pop();
-			thdata *player2 = fila.front();
-			fila.pop();
-
-			// Cria struct com os dois jogadores e envia informacao
-			PlayerPair *twoPlayers = new PlayerPair{player1, player2};
-			sendData = convertToChatBuffer("Jogadores conectados. Iniciando jogo...");
-			send(player1->sock, &sendData, sizeof(ServerData), 0);
-			send(player2->sock, &sendData, sizeof(ServerData), 0);
-
-			// Cria thread para jogar
-			pthread_create(&threads[i], &attr, &lobby, (void *)twoPlayers);
-		}
-		else if (fila.size() % 2 == 1)
-		{
-			ServerData sendData = convertToChatBuffer("Aguardando outro jogador conectar");
-			send(data->sock, &sendData, sizeof(ServerData), 0); // Avisa cliente que esta esperando outro jogador
-		}
-
-		i++;
+		send(player2->sock,buffer,sizeof(buffer),0);
 		pthread_mutex_unlock(&mutex);
+
 	}
 
-	printf("Abriu todas as threads. Esperando a thread terminar para fechar o servidor.\n");
+	}while (result == NULL);
 
-	for (i = 0; i < NUM_THREADS; i++)
-	{
-		pthread_join(threads[i], NULL);
-	}
+  pthread_mutex_lock(&mutex);
+  socketsThreadsIds[player1->thread] = -1; 
+  pthread_mutex_unlock(&mutex);
 
-	/* Clean up and exit */
-	pthread_cond_destroy(&cond_two_players);
-	pthread_attr_destroy(&attr);
-	pthread_mutex_destroy(&mutex);
+  printf("fechando conexao...\n");
+  shutdown(player1->sock, 2);
+  pthread_exit(NULL);
 
-	return 0;
+}
+
+
+int main()
+{
+    srand(time(NULL));
+    int welcomeSocket, chatSocket, newSocket, newChatSocket;
+    struct sockaddr_in serverAddr, chatAddr;
+    socklen_t addr_size;
+    pthread_t threads[NUM_THREADS][THREADS_TUPLE];
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    thdata_client data[NUM_THREADS]; // Structs de dados para os jogadores
+
+    // Cria socket principal para o jogo
+    welcomeSocket = socket(PF_INET, SOCK_STREAM, 0);
+    
+    // Configuração do endereço para o jogo
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(7891); // Porta do jogo
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
+
+    bind(welcomeSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+
+    // Cria socket para o chat
+    chatSocket = socket(PF_INET, SOCK_STREAM, 0);
+    
+    // Configuração do endereço para o chat
+    chatAddr.sin_family = AF_INET;
+    chatAddr.sin_port = htons(7892); // Porta separada para o chat
+    chatAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    memset(chatAddr.sin_zero, '\0', sizeof chatAddr.sin_zero);
+
+    bind(chatSocket, (struct sockaddr *)&chatAddr, sizeof(chatAddr));
+
+    pthread_mutex_init(&mutex, NULL);
+
+    // Escuta até NUM_THREADS conexões no socket do jogo
+    if (listen(welcomeSocket, NUM_THREADS) == 0)
+        printf("Listening for game connections\n");
+    else
+        printf("Error in game socket\n");
+
+    // Escuta no socket do chat
+    if (listen(chatSocket, NUM_THREADS) == 0)
+        printf("Listening for chat connections\n");
+    else
+        printf("Error in chat socket\n");
+
+    int i = 0;
+
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        socketsThreadsIds[i] = -1;
+    }
+
+    // Aceita conexões de jogadores e chat
+    i = 0;
+    while (i < NUM_THREADS)
+    {
+        printf("esperando conexao do jogador.... \n");
+        newSocket = accept(welcomeSocket, (struct sockaddr *)NULL, NULL); // Aceita conexões para o jogo
+
+        pthread_mutex_lock(&mutex);
+        socketsThreadsIds[i] = newSocket;
+        data[i].game.thread = i;
+        data[i].game.sock = newSocket;
+
+        printf("Jogador conectado. Esperando chat...\n");
+
+        // Aceita conexão de chat associada ao jogador
+        newChatSocket = accept(chatSocket, (struct sockaddr *)NULL, NULL);
+		data[i].chat.thread = i;
+        data[i].chat.sock = newChatSocket; // Armazena o socket do chat
+
+        connectedPlayers++;
+        printf("Chat para o jogador conectado.\n");
+
+        // Enfileirar e começar o jogo se houver dois jogadores
+        fila.push(&data[i]);
+
+        ServerData sendData = convertToChatBuffer("Você é o jogador " + to_string(data[i].game.thread + 1));
+        send(data[i].game.sock, &sendData, sizeof(ServerData), 0);
+
+        if (fila.size() % 2 == 0)
+        {
+            thdata_client *player1 = fila.front();
+            fila.pop();
+            thdata_client *player2 = fila.front();
+            fila.pop();
+
+            PlayerPair *twoPlayersGame = new PlayerPair{&player1->game, &player2->game};
+			PlayerPair *twoPlayersChat1 = new PlayerPair{&player1->chat, &player2->chat};
+			PlayerPair *twoPlayersChat2 = new PlayerPair{&player2->chat, &player1->chat};
+
+            sendData = convertToChatBuffer("Jogadores conectados. Iniciando jogo...");
+            send(player1->game.sock, &sendData, sizeof(ServerData), 0);
+            send(player2->game.sock, &sendData, sizeof(ServerData), 0);
+
+            // Cria thread para jogar
+            pthread_create(&threads[i][GAME], &attr, &lobby, (void *)twoPlayersGame);
+
+			//cria thread de envio do player 1 ao 2
+			pthread_create(&threads[i][CHAT], &attr, &chatRoom, (void *)twoPlayersChat1);
+			//cria thread de envio do player 1 ao 2
+			pthread_create(&threads[i][CHAT2], &attr, &chatRoom, (void *)twoPlayersChat2);
+        }
+        else
+        {
+            ServerData sendData = convertToChatBuffer("Aguardando outro jogador conectar");
+            send(data[i].game.sock, &sendData, sizeof(ServerData), 0);
+        }
+
+        i++;
+        pthread_mutex_unlock(&mutex);
+    }
+
+    printf("Abriu todas as threads. Esperando a thread terminar para fechar o servidor.\n");
+
+    for (i = 0; i < NUM_THREADS; i++)
+    {
+        pthread_join(threads[i][GAME], NULL);
+		pthread_join(threads[i][CHAT], NULL);
+		pthread_join(threads[i][CHAT2], NULL);
+    }
+
+    pthread_cond_destroy(&cond_two_players);
+    pthread_attr_destroy(&attr);
+    pthread_mutex_destroy(&mutex);
+
+    return 0;
 }
 
 /*

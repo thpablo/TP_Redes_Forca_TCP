@@ -136,7 +136,7 @@ if (s != 0) {
 
 while (1){
     recv(mainWindow->thDataChat.sock, buffer, sizeof(buffer), 0);
-        //emit mainWindow->newChatMessageReceived(QString(buffer));
+        emit mainWindow->newChatMessageReceived(QString(buffer));
 }
     printf("Fim de Jogo\n");
     // pthread_cancel(mainWindow->thDataGame.thread);
@@ -148,7 +148,7 @@ while (1){
 
 void MainWindow::sendGameMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
-    cData.type = GUESS;
+    cData.type = GAME;
     QString qText = ui->enterGameGuess->text();
     ui->enterGameGuess->clear();
     QByteArray byteArray = qText.toUtf8();

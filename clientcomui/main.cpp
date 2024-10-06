@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
 
 
-// typedef enum{CHAT, GUESS}ClientDataType;
+// typedef enum{CHAT, GAME}ClientDataType;
 // typedef enum{RIGHT, WRONG, WINNER, LOSER}FlagType;
 
 // //dados do cliente ao server

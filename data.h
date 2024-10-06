@@ -2,7 +2,7 @@
 #define DATA_H
 #include<pthread.h>
 
-enum{CHAT, GUESS};
+enum{GAME, CHAT, CHAT2};
 enum{RIGHT, WRONG, WINNER, LOSER, NOTHING};
 enum{INGAME, LOST, WON};
 
@@ -29,5 +29,9 @@ typedef struct str_thdata{
   pthread_t thread;
 } thdata;
 
+typedef struct client_thdata{
+  thdata game;
+  thdata chat;
+} thdata_client;
 
 #endif
