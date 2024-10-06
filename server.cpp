@@ -149,7 +149,7 @@ public:
 		wordSecret = chooseWord(difficulty); // Escolhe palavra de acordo com a dificuldade
 		cout << "Palavra secreta: " << wordSecret << endl;
 		hideWord();						  // Esconde palavra com "_"
-		maxError = 5; // Erros máximo = tamanho da palavra + 2
+		maxError = 6; // Erros máximo = tamanho da palavra + 2
 	}
 
 	int getCountError(){return countError;}
@@ -331,6 +331,8 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 			string wordShown = game.getWordShown(); // Captura mensagem escondida
 			sendData.isAMessageFromServer = 0;
 			strcpy(sendData.shownWord, wordShown.c_str());
+			strcpy(sendData.wrongLetters, game.wrongLetters);
+			sendData.wrongGuesses = game.getCountError();
 
 			sendData.flag = gameStatus; // Define o flag de acordo com o resultado
 			send(currentPlayer.sock, &sendData, sizeof(ServerData), 0);
@@ -533,6 +535,3 @@ int main()
 	return 0;
 }
 
-void* chatConexao(void* param){
-	
-}

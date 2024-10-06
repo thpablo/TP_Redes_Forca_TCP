@@ -32,12 +32,18 @@
      <rect>
       <x>20</x>
       <y>190</y>
-      <width>341</width>
-      <height>271</height>
+      <width>371</width>
+      <height>321</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">background: transparent; border: none;</string>
+    </property>
+    <property name="verticalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+    </property>
+    <property name="horizontalScrollBarPolicy">
+     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
     </property>
     <property name="interactive">
      <bool>false</bool>
@@ -49,7 +55,7 @@
       <x>720</x>
       <y>0</y>
       <width>371</width>
-      <height>521</height>
+      <height>501</height>
      </rect>
     </property>
     <property name="readOnly">
@@ -69,7 +75,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
    <widget class="QTextEdit" name="wrongLetters">
     <property name="geometry">
      <rect>
-      <x>390</x>
+      <x>410</x>
       <y>260</y>
       <width>291</width>
       <height>81</height>
@@ -92,7 +98,7 @@ font: 700 14pt &quot;Liberation Sans&quot;;</string>
    <widget class="QLabel" name="labelWrongLetters">
     <property name="geometry">
      <rect>
-      <x>420</x>
+      <x>440</x>
       <y>230</y>
       <width>211</width>
       <height>31</height>
@@ -275,6 +281,19 @@ font: 14pt &quot;Sans Serif&quot;;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="chatLabel">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>520</y>
+      <width>81</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>CHAT</string>
     </property>
    </widget>
   </widget>

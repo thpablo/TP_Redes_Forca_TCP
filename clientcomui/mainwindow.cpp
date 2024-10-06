@@ -25,11 +25,30 @@ MainWindow::MainWindow(QWidget *parent)
     int kill = 0;
     connectServer();
     connectSignalsAndSlots();
+    ui->HangmanImage->setScene(new QGraphicsScene(this));
+    changeImage(0);
 }
 
 MainWindow::~MainWindow()
 {
-    int kill = 1;
+    //int kill = 1;
+    // Finalizar as threads de jogo e chat
+    pthread_cancel(thDataGame.thread);  // Cancela a thread de jogo
+    pthread_join(thDataGame.thread, NULL);  // Aguarda a thread de jogo finalizar
+
+    pthread_cancel(thDataChat.thread);  // Cancela a thread de chat
+    pthread_join(thDataChat.thread, NULL);  // Aguarda a thread de chat finalizar
+
+    // Fechar os sockets de jogo e chat
+    if (thDataGame.sock != -1) {
+        shutdown(thDataGame.sock, 2);  // Fecha o socket de jogo
+        thDataGame.sock = -1;    // Define como inválido após fechar
+    }
+
+    if (thDataChat.sock != -1) {
+        shutdown(thDataChat.sock, 2);  // Fecha o socket de chat
+        thDataChat.sock = -1;    // Define como inválido após fechar
+    }
     delete ui;
 }
 
@@ -51,53 +70,55 @@ void MainWindow::connectSignalsAndSlots(){
 
 void* ReceiveGameData(void *param){
 
-MainWindow *mainWindow;
-mainWindow = (MainWindow *) param;
+    MainWindow *mainWindow;
+    mainWindow = (MainWindow *) param;
 
-//ServerData receivedData;
-int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-if (s != 0) {
-    printf("Erro.");
-    exit(0);
-}
-ServerData gameData;
+    //ServerData receivedData;
+    int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+    if (s != 0) {
+        printf("Erro.");
+        exit(0);
+    }
+    ServerData gameData;
 
-gameData.flag = NOTHING;
+    gameData.flag = NOTHING;
 
-while (gameData.flag != WINNER && gameData.flag != LOSER && mainWindow->kill != 1){
-    if(recv(mainWindow->thDataGame.sock, &gameData, sizeof(ServerData), 0) <= 0){
-        //conexão perdida
-        emit mainWindow->newChatMessageReceived(QString("ERRO: CONEXÃO PERDIDA, DESCONECTANDO..."));
-        // sleep(2);
-        // shutdown(mainWindow->dataRecv.sock, 2);
-        // pthread_exit(nullptr);  // Encerrar a thread de recebimento
-        // return nullptr;
+    while (gameData.flag != WINNER && gameData.flag != LOSER && mainWindow->kill != 1){
+        if(recv(mainWindow->thDataGame.sock, &gameData, sizeof(ServerData), 0) <= 0){
+            //conexão perdida
+            emit mainWindow->newChatMessageReceived(QString("ERRO: CONEXÃO PERDIDA, DESCONECTANDO..."));
+            break;
+            // sleep(2);
+            // shutdown(mainWindow->dataRecv.sock, 2);
+            // pthread_exit(nullptr);  // Encerrar a thread de recebimento
+            // return nullptr;
+            // sleep(5);
+            // pthread_cancel(mainWindow->thDataGame.thread);
+            // shutdown(mainWindow->thDataGame.sock, 2);
+            // pthread_exit(NULL);
+        }
+
+        if(gameData.isAMessageFromServer)
+            emit mainWindow->newChatMessageReceived(QString(gameData.chatBuffer));
+        
+        else{
+            emit mainWindow->newGameData(gameData);
+        }
+        //emit mainWindow->newGameData(gameData);
+
+        if(gameData.flag == WINNER || gameData.flag == LOSER){
+            emit mainWindow->newGameData(gameData);
+            break;
+        }
+
+    }
+    //função de vitória/derrota
+        printf("Fim de Jogo\n");
         sleep(5);
-        pthread_cancel(mainWindow->thDataGame.thread);
-        shutdown(mainWindow->thDataGame.sock, 2);
-        pthread_exit(NULL);
-    }
-
-    if(gameData.isAMessageFromServer)
-        emit mainWindow->newChatMessageReceived(QString(gameData.chatBuffer));
-    
-    else{
-        emit mainWindow->newGameData(gameData);
-    }
-    //emit mainWindow->newGameData(gameData);
-
-    if(gameData.flag == WINNER || gameData.flag == LOSER){
-        emit mainWindow->newGameData(gameData);
-        break;
-    }
-
-}
-//função de vitória/derrota
-    printf("Fim de Jogo\n");
-    sleep(5);
-    pthread_cancel(mainWindow->thDataGame.thread);
-    shutdown(mainWindow->thDataGame.sock, 2);
-    pthread_exit(NULL);
+        // pthread_cancel(mainWindow->thDataGame.thread);
+        // shutdown(mainWindow->thDataGame.sock, 2);
+        // pthread_exit(NULL);
+        return nullptr;
 
 }
 
@@ -115,13 +136,14 @@ if (s != 0) {
 
 while (1){
     recv(mainWindow->thDataChat.sock, buffer, sizeof(buffer), 0);
-    //emit mainWindow->newChatMessageReceived(QString(buffer));
+        //emit mainWindow->newChatMessageReceived(QString(buffer));
 }
     printf("Fim de Jogo\n");
-    pthread_cancel(mainWindow->thDataGame.thread);
-    sleep(5);
-    shutdown(mainWindow->thDataGame.sock, 2);
-    pthread_exit(NULL);
+    // pthread_cancel(mainWindow->thDataGame.thread);
+    // sleep(5);
+    // shutdown(mainWindow->thDataGame.sock, 2);
+    // pthread_exit(NULL);
+    return nullptr;
 }
 
 void MainWindow::sendGameMessage(){
@@ -223,6 +245,7 @@ void MainWindow::playSound(int type) {
 
 void MainWindow::refreshGame(const ServerData gameData){
     playSound(gameData.flag);
+    changeImage(gameData.wrongGuesses);
     if (gameData.yourTurn == 0) {
         ui->enterGameGuess->setReadOnly(true);  // Impede a escrita
         ui->ServerMessages->setText("Vez do adversário");
@@ -234,12 +257,47 @@ void MainWindow::refreshGame(const ServerData gameData){
     }
     //QString chatString = QString(mainWindow->gameData.shownWord);
     ui->Palavra->setText(QString(gameData.shownWord).toUpper());
-
-
-   
+    
     ui->wrongLetters->setText(QString(gameData.wrongLetters).toUpper());
     }
 
     void MainWindow::appendChatMessage(const QString &message){
         ui->chatLogs->append(message);
+}
+
+void MainWindow::changeImage(int qtdErrors) {
+    ui->HangmanImage->scene()->clear();  // Limpa a cena atual
+
+    QPixmap pixmap;  // Declara a variável pixmap antes do switch
+
+    switch (qtdErrors) {
+        case 0:
+            pixmap = QPixmap("images/e0.png");  // Atribui a imagem correspondente
+            break;
+        case 1:
+            pixmap = QPixmap("images/e1.png");
+            break;
+        case 2:
+            pixmap = QPixmap("images/e2.png");
+            break;
+        case 3:
+            pixmap = QPixmap("images/e3.png");
+            break;
+        case 4:
+            pixmap = QPixmap("images/e4.png");
+            break;
+        case 5:
+            pixmap = QPixmap("images/e5.png");
+            break;
+        case 6:
+            pixmap = QPixmap("images/e6.png");
+            break;
+        default:
+            pixmap = QPixmap();  // Caso de erro: nenhuma imagem
+            break;
+    }
+
+    QGraphicsPixmapItem *item = new QGraphicsPixmapItem(pixmap);  // Cria o item gráfico com a imagem
+    ui->HangmanImage->scene()->addItem(item);  // Adiciona o item à cena
+    ui->HangmanImage->fitInView(item, Qt::KeepAspectRatio);  // Ajusta a visualização para a imagem
 }

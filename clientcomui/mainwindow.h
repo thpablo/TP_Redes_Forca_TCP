@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QPixmap>
+#include <QGraphicsPixmapItem>
 #include<string>
 #include"../data.h"
 
@@ -30,7 +32,7 @@ int kill;
 void connectSignalsAndSlots();
 void connectServer();
 void playSound(int type);
-void refresh();
+void changeImage(int qtdErrors);
 public:
     friend void* ReceiveGameData(void *param);
     friend void* ReceiveChatData(void *param);

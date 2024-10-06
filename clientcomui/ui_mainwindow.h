@@ -35,6 +35,7 @@ public:
     QLineEdit *Palavra;
     QLineEdit *ServerMessages;
     QLabel *labelWord;
+    QLabel *chatLabel;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -50,23 +51,25 @@ public:
         enterGameGuess->setGeometry(QRect(50, 550, 551, 31));
         HangmanImage = new QGraphicsView(centralwidget);
         HangmanImage->setObjectName("HangmanImage");
-        HangmanImage->setGeometry(QRect(20, 190, 341, 271));
+        HangmanImage->setGeometry(QRect(20, 190, 371, 321));
         HangmanImage->setStyleSheet(QString::fromUtf8("background: transparent; border: none;"));
+        HangmanImage->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+        HangmanImage->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
         HangmanImage->setInteractive(false);
         chatLogs = new QTextEdit(centralwidget);
         chatLogs->setObjectName("chatLogs");
-        chatLogs->setGeometry(QRect(720, 0, 371, 521));
+        chatLogs->setGeometry(QRect(720, 0, 371, 501));
         chatLogs->setReadOnly(true);
         wrongLetters = new QTextEdit(centralwidget);
         wrongLetters->setObjectName("wrongLetters");
-        wrongLetters->setGeometry(QRect(390, 260, 291, 81));
+        wrongLetters->setGeometry(QRect(410, 260, 291, 81));
         wrongLetters->setStyleSheet(QString::fromUtf8("background: transparent; border: none;\n"
 "font: 700 14pt \"Liberation Sans\";"));
         wrongLetters->setLineWrapMode(QTextEdit::LineWrapMode::NoWrap);
         wrongLetters->setReadOnly(true);
         labelWrongLetters = new QLabel(centralwidget);
         labelWrongLetters->setObjectName("labelWrongLetters");
-        labelWrongLetters->setGeometry(QRect(420, 230, 211, 31));
+        labelWrongLetters->setGeometry(QRect(440, 230, 211, 31));
         labelWrongLetters->setStyleSheet(QString::fromUtf8("font: 22pt \"Sans Serif\";"));
         ChatEntry = new QLineEdit(centralwidget);
         ChatEntry->setObjectName("ChatEntry");
@@ -103,6 +106,9 @@ public:
         labelWord->setGeometry(QRect(260, 70, 211, 31));
         labelWord->setStyleSheet(QString::fromUtf8("font: 22pt \"Sans Serif\";"));
         labelWord->setAlignment(Qt::AlignmentFlag::AlignCenter);
+        chatLabel = new QLabel(centralwidget);
+        chatLabel->setObjectName("chatLabel");
+        chatLabel->setGeometry(QRect(890, 520, 81, 21));
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -136,6 +142,7 @@ public:
         ServerMessages->setText(QString());
         ServerMessages->setPlaceholderText(QCoreApplication::translate("MainWindow", "Sua vez", nullptr));
         labelWord->setText(QCoreApplication::translate("MainWindow", "Palavra", nullptr));
+        chatLabel->setText(QCoreApplication::translate("MainWindow", "CHAT", nullptr));
     } // retranslateUi
 
 };
