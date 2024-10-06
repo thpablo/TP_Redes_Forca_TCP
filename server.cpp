@@ -20,7 +20,6 @@
 #include <thread>
 #include <vector>
 
-
 #include <iostream>
 #include <fstream>
 
@@ -30,10 +29,15 @@
 #include <cstring> // Para std::strcpy
 #include "data.h"
 #include "chat.h"
+#include <queue>
 
 using namespace std;
 
 #define NUM_THREADS 30
+
+/*** Teste fila */
+queue<thdata *> fila;
+/******** */
 
 int socketsThreadsIds[NUM_THREADS]; // Vetor de sockets
 int connectedPlayers = 0;			// Contador de jogadores conectados
@@ -45,7 +49,6 @@ bool inACurrentGame = false;	// Verifica se existe um jogo em andamento
 pthread_mutex_t mutex;										// Mutex para controle de acesso a variáveis compartilhadas
 pthread_cond_t cond_two_players = PTHREAD_COND_INITIALIZER; // Mutex para espera de 2 players
 pthread_cond_t cond_has_a_game = PTHREAD_COND_INITIALIZER;	// Mutex para espera de 2 players
-
 
 // Classe para o chat e contar tentativas restantes
 class Player
@@ -133,7 +136,7 @@ private:
 	string wordShown;
 	int maxError;
 	int countError;
-	int countWrongLetters;// quantidade de tentativas de erros de única letra (usado para navegar no vetor wrongLetters)
+	int countWrongLetters; // quantidade de tentativas de erros de única letra (usado para navegar no vetor wrongLetters)
 
 public:
 	char wrongLetters[100];
@@ -148,11 +151,11 @@ public:
 	{
 		wordSecret = chooseWord(difficulty); // Escolhe palavra de acordo com a dificuldade
 		cout << "Palavra secreta: " << wordSecret << endl;
-		hideWord();						  // Esconde palavra com "_"
+		hideWord();	  // Esconde palavra com "_"
 		maxError = 6; // Erros máximo = tamanho da palavra + 2
 	}
 
-	int getCountError(){return countError;}
+	int getCountError() { return countError; }
 
 	string getWordShown()
 	{
@@ -185,7 +188,7 @@ public:
 	// Verifica correspondencia de letra ou palavra
 	int play(string word)
 	{
-		if (check(word))								   // Se houve correspondência a palavra ou letra
+		if (check(word))									 // Se houve correspondência a palavra ou letra
 			return wordSecret == wordShown ? WINNER : RIGHT; // Retorna se ganhou ou continua em jogo
 		else
 		{
@@ -200,7 +203,7 @@ public:
 	// Verifica se contém letra ou é a palavra
 	bool check(string s)
 	{
-		
+
 		bool found = false;
 		if (s.size() == 1)
 		{ // Verifica letra
@@ -213,10 +216,11 @@ public:
 				}
 			}
 
-			if(!found){
-				wrongLetters[countWrongLetters*2] = s[0];
-				wrongLetters[countWrongLetters*2+1] = ' ';
-				wrongLetters[countWrongLetters*2+2] = '\0';
+			if (!found)
+			{
+				wrongLetters[countWrongLetters * 2] = s[0];
+				wrongLetters[countWrongLetters * 2 + 1] = ' ';
+				wrongLetters[countWrongLetters * 2 + 2] = '\0';
 				countWrongLetters++;
 			}
 			return found;
@@ -302,7 +306,6 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		strcpy(sendData.shownWord, wordShown.c_str());
 		strcpy(sendData.wrongLetters, game.wrongLetters);
 		sendData.wrongGuesses = game.getCountError();
-		
 
 		sendData.yourTurn = 0;
 		// Envia a palavra escondida para os dois jogadores
@@ -313,9 +316,8 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 		send(currentPlayer.sock, &sendData, sizeof(ServerData), 0);
 
 		// Envia mensagem para outro jogador aguardar sua vez
-		//sendData = convertToChatBuffer("Aguarde sua vez");
-		
-		
+		// sendData = convertToChatBuffer("Aguarde sua vez");
+
 		recv(currentPlayer.sock, &cData, sizeof(ClientData), 0);
 		cout << "Mensagem recebida do cliente = " << cData.buffer << endl;
 
@@ -340,10 +342,10 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 			sendData.flag = LOSER;
 			send(anotherPlayer.sock, &sendData, sizeof(ServerData), 0);
 
-			cout << "Fim de jogo\n" << endl;
+			cout << "Fim de jogo\n"
+				 << endl;
 			cout << "Jogador " << (currentPlayer.thread + 1) << " " << resGameToString(gameStatus) << endl;
-			
-			
+
 			pthread_mutex_unlock(&mutex);
 			break; // Termina o loop se o jogo acabou
 		}
@@ -360,11 +362,11 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	pthread_cond_broadcast(&cond_has_a_game); // Acorda todas as threads para que possam jogar
 }
 
-// Lobby espera dois players se conectarem
+/* Lobby espera dois players se conectarem
 void *lobby(void *param)
 {
 	thdata *data;
-	data = (thdata *)param; /* type cast to a pointer to thdata */
+	data = (thdata *)param; // type cast to a pointer to thdata
 	ServerData sendData;
 	Hangman game;
 
@@ -386,16 +388,6 @@ void *lobby(void *param)
 		pthread_cond_wait(&cond_two_players, &mutex); // Espera outro jogador se conectar
 		pthread_mutex_unlock(&mutex);
 	}
-
-	/*
-	// Verifica se existe jogo, se sim, espera no lobby
-	if (!inACurrentGame)
-	{
-		pthread_mutex_lock(&mutex);
-		pthread_cond_wait(&cond_has_a_game, &mutex); // Espera um jogo ser criado
-		pthread_mutex_unlock(&mutex);
-	}
-	*/
 
 	cout << "Jogador " << (data->thread + 1) << " conectado. Iniciando jogo..." << endl;
 
@@ -447,7 +439,175 @@ void *lobby(void *param)
 
 	pthread_exit(NULL);
 }
+*/
 
+// Struct para armazenar dupla de jogadores
+struct PlayerPair
+{
+	thdata *player1;
+	thdata *player2;
+};
+
+string decideDifficulty(thdata *playerWhosDecide, thdata *anotherPlayer)
+{
+	ServerData sendData;
+	sendData = convertToChatBuffer("Server: Escolha a dificuldade para o jogo\n");
+	send(playerWhosDecide->sock, &sendData, sizeof(ServerData), 0);
+	sendData = convertToChatBuffer("Server: Aguarde o outro jogador escolher a dificuldade\n");
+	send(anotherPlayer->sock, &sendData, sizeof(ServerData), 0);
+	string difficulty = "";
+	ClientData cData;
+	while (difficulty != "facil" && difficulty != "medio" && difficulty != "dificil")
+	{
+		recv(playerWhosDecide->sock, &cData, sizeof(ClientData), 0);
+		printf("%s\n", cData.buffer);
+		cout << convertCharToString(cData.buffer);
+		difficulty = convertCharToString(cData.buffer);
+	}
+	return difficulty;
+}
+
+void *lobby(void *param)
+{
+	PlayerPair *players = (PlayerPair *)param;
+
+	thdata *player1 = players->player1;
+	thdata *player2 = players->player2;
+	delete players; // Libere a memória alocada para players
+	ServerData sendData;
+	Hangman game;
+	string difficulty = "";
+
+	// Randomiza quem Escolhe dificuldade do jogo
+	int whoDecidesDifficulty = rand() % 2; // 0 = player1, 1 = player2
+	if (whoDecidesDifficulty == 0)
+	{
+		difficulty = decideDifficulty(player1, player2);
+	}
+	else
+	{
+		difficulty = decideDifficulty(player2, player1);
+	}
+	cout << "Dificuldade escolhida: " << difficulty << endl;
+	game.createGame(difficulty); // Cria jogo com dificuldade escolhida
+
+	inGame(game, *player1, *player2); // Inicia o jogo
+	return nullptr;
+}
+
+int main()
+{
+	srand(time(NULL));
+	int welcomeSocket, newSocket;
+
+	struct sockaddr_in serverAddr;
+	socklen_t addr_size;
+	pthread_t threads[NUM_THREADS];
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+	// Cria 30 structs de dados (  int thread_no; int sock;)
+	thdata data[NUM_THREADS];
+
+	// Cria socket
+	welcomeSocket = socket(PF_INET, SOCK_STREAM, 0);
+
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(7891); // lembrar de alterar se necessário
+
+	// lembrar de alterar se o servidor e cliente estiverem em máquinas diferentes. Nesse caso, colocar o IP da máquina que será servidora
+	// o IP 127.0.0.1 só funciona se cliente e servidor estiverem na mesma máquina
+	serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
+
+	bind(welcomeSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+
+	pthread_mutex_init(&mutex, NULL);
+
+	// informando que o socket irá ouvir até NUM_THREADS conexões
+	// Limitar quantidade máxima de jogares em NUM_THREADS (2)
+	if (listen(welcomeSocket, NUM_THREADS) == 0)
+		printf("Listening\n");
+	else
+		printf("Error\n");
+
+	int i;
+
+	// inicializando o vetor que conterá as referências para as threads. -1 indica que não existe thread associada.
+
+	for (i = 0; i < NUM_THREADS; i++)
+	{
+		socketsThreadsIds[i] = -1;
+	}
+
+	// esperar no máximo NUM_THREADS conexões
+	i = 0;
+	while (i < NUM_THREADS)
+	{
+
+		printf("esperando conexao do cliente.... \n");
+		newSocket = accept(welcomeSocket, (struct sockaddr *)NULL, NULL);
+
+		pthread_mutex_lock(&mutex);
+		socketsThreadsIds[i] = newSocket; // newSocket é um ID gerado pelo sistema operacional
+		data[i].thread = i;
+		data[i].sock = newSocket;
+
+		connectedPlayers++;
+		printf("cliente conectou.\n");
+
+		// Adiciona Fila
+		fila.push(&data[i]);
+
+		// Envia número da thread para o jogador
+		ServerData sendData = convertToChatBuffer("Você é o jogador " + to_string(data->thread + 1));
+		send(data->sock, &sendData, sizeof(ServerData), 0);
+
+		// Quando o segundo jogador conectar, todos podem prosseguir
+		if (fila.size() % 2 == 0)
+		{
+			// Desinfileira os dois jogadores
+			thdata *player1 = fila.front();
+			fila.pop();
+			thdata *player2 = fila.front();
+			fila.pop();
+
+			// Cria struct com os dois jogadores e envia informacao
+			PlayerPair *twoPlayers = new PlayerPair{player1, player2};
+			sendData = convertToChatBuffer("Jogadores conectados. Iniciando jogo...");
+			send(player1->sock, &sendData, sizeof(ServerData), 0);
+			send(player2->sock, &sendData, sizeof(ServerData), 0);
+
+			// Cria thread para jogar
+			pthread_create(&threads[i], &attr, &lobby, (void *)twoPlayers);
+		}
+		else if (fila.size() % 2 == 1)
+		{
+			ServerData sendData = convertToChatBuffer("Aguardando outro jogador conectar");
+			send(data->sock, &sendData, sizeof(ServerData), 0); // Avisa cliente que esta esperando outro jogador
+		}
+
+		i++;
+		pthread_mutex_unlock(&mutex);
+	}
+
+	printf("Abriu todas as threads. Esperando a thread terminar para fechar o servidor.\n");
+
+	for (i = 0; i < NUM_THREADS; i++)
+	{
+		pthread_join(threads[i], NULL);
+	}
+
+	/* Clean up and exit */
+	pthread_cond_destroy(&cond_two_players);
+	pthread_attr_destroy(&attr);
+	pthread_mutex_destroy(&mutex);
+
+	return 0;
+}
+
+/*
 int main()
 {
 	srand(time(NULL));
@@ -527,7 +687,7 @@ int main()
 		pthread_join(threads[i], NULL);
 	}
 
-	/* Clean up and exit */
+	// Clean up and exit
 	pthread_cond_destroy(&cond_two_players);
 	pthread_attr_destroy(&attr);
 	pthread_mutex_destroy(&mutex);
@@ -535,3 +695,4 @@ int main()
 	return 0;
 }
 
+*/
