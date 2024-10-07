@@ -68,15 +68,9 @@ void* ReceiveGameData(void *param) {
             emit mainWindow->newGameData(gameData);
         }
 
-        if (gameData.flag == WINNER) {
-            emit mainWindow->newGameData(gameData);
+        if (gameData.flag == WINNER || gameData.flag == LOSER) 
             break;
-        }
         
-        else if (gameData.flag == LOSER) {
-            emit mainWindow->newGameData(gameData);
-            break;
-        }
     }
 
     printf("Fim de Jogo\n");
@@ -211,20 +205,23 @@ void MainWindow::refreshGame(const ServerData gameData){
         ui->enterGameGuess->setReadOnly(false); // Libera a escrita
         ui->ServerMessages->setText("Sua vez");
     }
-    //QString chatString = QString(mainWindow->gameData.shownWord);
-    ui->Palavra->setText(QString(gameData.shownWord).toUpper());
     
+    ui->Palavra->setText(QString(gameData.shownWord).toUpper());
     ui->wrongLetters->setText(QString(gameData.wrongLetters).toUpper());
-    }
 
-    void MainWindow::appendChatMessage(const QString &message){
-        ui->chatLogs->append(message);
     if(gameData.flag == WINNER){
+        ui->enterGameGuess->setReadOnly(true);  // Impede a escrita
         ui->ServerMessages->setText("Você Venceu!!!");
     }
     else if(gameData.flag == LOSER){
+        ui->enterGameGuess->setReadOnly(true);  // Impede a escrita
         ui->ServerMessages->setText("Você Perdeu!!!");
     }
+}
+
+void MainWindow::appendChatMessage(const QString &message){
+        ui->chatLogs->append(message);
+
 }
 
 void MainWindow::changeImage(int qtdErrors) {
