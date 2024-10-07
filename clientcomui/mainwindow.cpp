@@ -4,6 +4,7 @@
 #include <pthread.h>    /* POSIX Threads */ 
 #include <stdlib.h>
 #include <QSoundEffect>
+#include<QMessageBox>
 
 #include <fcntl.h> // for open
 #include <unistd.h> // for close
@@ -22,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     ui->setupUi(this);
-    int kill = 0;
+    running = true; // Inicia a variável de controle
     connectServer();
     connectSignalsAndSlots();
     ui->HangmanImage->setScene(new QGraphicsScene(this));
@@ -31,129 +32,97 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    //int kill = 1;
-    // Finalizar as threads de jogo e chat
-    pthread_cancel(thDataGame.thread);  // Cancela a thread de jogo
-    pthread_join(thDataGame.thread, NULL);  // Aguarda a thread de jogo finalizar
+    running = false; // Sinaliza para as threads que devem encerrar
 
-    pthread_cancel(thDataChat.thread);  // Cancela a thread de chat
-    pthread_join(thDataChat.thread, NULL);  // Aguarda a thread de chat finalizar
+    // Aguarda a thread de jogo finalizar
+    pthread_join(thDataGame.thread, NULL);
 
-    // Fechar os sockets de jogo e chat
-    if (thDataGame.sock != -1) {
-        shutdown(thDataGame.sock, 2);  // Fecha o socket de jogo
-        thDataGame.sock = -1;    // Define como inválido após fechar
-    }
+    // Aguarda a thread de chat finalizar
+    pthread_join(thDataChat.thread, NULL);
 
-    if (thDataChat.sock != -1) {
-        shutdown(thDataChat.sock, 2);  // Fecha o socket de chat
-        thDataChat.sock = -1;    // Define como inválido após fechar
-    }
     delete ui;
 }
 
 void MainWindow::connectSignalsAndSlots(){
-    //     QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, [=](){
-    //     QString gameText = ui->enterGameGuess->text();  // Obtém o texto do QLineEdit
-    //     //QMessageBox::information(nullptr, "Texto", "O texto digitado é: " + gameText);
-    // });
-    //     QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, [=]() {
-    //     QString chatText = ui->ChatEntry->text();  // Obtém o texto do QLineEdit
-    // });
         QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, this, &MainWindow::sendGameMessage);
         QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, this, &MainWindow::sendChatMessage);
         QObject::connect(this, &MainWindow::newChatMessageReceived, this, &MainWindow::appendChatMessage);
         QObject::connect(this, &MainWindow::newGameData, this, &MainWindow::refreshGame);
-        //QObject::connect(ui->enterGameGuess, &QLineEdit::returnPressed, ui->enterGameGuess, qOverload<>(&QLineEdit::clear));
-        //QObject::connect(ui->ChatEntry, &QLineEdit::returnPressed, ui->ChatEntry, qOverload<>(&QLineEdit::clear));
+    
 }
 
-void* ReceiveGameData(void *param){
-
-    MainWindow *mainWindow;
-    mainWindow = (MainWindow *) param;
-
-    //ServerData receivedData;
-    int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-    if (s != 0) {
-        printf("Erro.");
-        exit(0);
-    }
+void* ReceiveGameData(void *param) {
+    MainWindow *mainWindow = (MainWindow *) param;
     ServerData gameData;
-
     gameData.flag = NOTHING;
 
-    while (gameData.flag != WINNER && gameData.flag != LOSER && mainWindow->kill != 1){
-        if(recv(mainWindow->thDataGame.sock, &gameData, sizeof(ServerData), 0) <= 0){
-            //conexão perdida
+    while (mainWindow->running) {
+        if (recv(mainWindow->thDataGame.sock, &gameData, sizeof(ServerData), 0) <= 0) {
             emit mainWindow->newChatMessageReceived(QString("ERRO: CONEXÃO PERDIDA, DESCONECTANDO..."));
             break;
-            // sleep(2);
-            // shutdown(mainWindow->dataRecv.sock, 2);
-            // pthread_exit(nullptr);  // Encerrar a thread de recebimento
-            // return nullptr;
-            // sleep(5);
-            // pthread_cancel(mainWindow->thDataGame.thread);
-            // shutdown(mainWindow->thDataGame.sock, 2);
-            // pthread_exit(NULL);
         }
 
-        if(gameData.isAMessageFromServer)
+        if (gameData.isAMessageFromServer)
             emit mainWindow->newChatMessageReceived(QString(gameData.chatBuffer));
-        
-        else{
+        else {
             emit mainWindow->newGameData(gameData);
         }
-        //emit mainWindow->newGameData(gameData);
 
-        if(gameData.flag == WINNER || gameData.flag == LOSER){
+        if (gameData.flag == WINNER) {
             emit mainWindow->newGameData(gameData);
             break;
         }
-
+        
+        else if (gameData.flag == LOSER) {
+            emit mainWindow->newGameData(gameData);
+            break;
+        }
     }
-    //função de vitória/derrota
-        printf("Fim de Jogo\n");
-        sleep(5);
-        // pthread_cancel(mainWindow->thDataGame.thread);
-        // shutdown(mainWindow->thDataGame.sock, 2);
-        // pthread_exit(NULL);
-        return nullptr;
 
-}
-
-void* ReceiveChatData(void *param){
-
-MainWindow *mainWindow;
-mainWindow = (MainWindow *) param;
-
-char buffer[1024];
-int s = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-if (s != 0) {
-    printf("Erro.");
-    exit(0);
-}
-
-while (1){
-    recv(mainWindow->thDataChat.sock, buffer, sizeof(buffer), 0);
-        emit mainWindow->newChatMessageReceived(QString(buffer));
-}
     printf("Fim de Jogo\n");
-    // pthread_cancel(mainWindow->thDataGame.thread);
-    // sleep(5);
-    // shutdown(mainWindow->thDataGame.sock, 2);
-    // pthread_exit(NULL);
-    return nullptr;
+    shutdown(mainWindow->thDataGame.sock, 2);
+    pthread_exit(NULL);
+}
+
+void* ReceiveChatData(void *param) {
+    MainWindow *mainWindow = (MainWindow *) param;
+    char buffer[1024];
+
+    while (mainWindow->running) {
+        if (recv(mainWindow->thDataChat.sock, buffer, sizeof(buffer), 0) <= 0)
+            break;
+
+        emit mainWindow->newChatMessageReceived(QString(buffer));
+    }
+
+    printf("Fim de Jogo\n");
+    shutdown(mainWindow->thDataChat.sock, 2);
+    pthread_exit(NULL);
 }
 
 void MainWindow::sendGameMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     cData.type = GAME;
     QString qText = ui->enterGameGuess->text();
+
+    // Verificar se o qText contém apenas uma letra
+    if (qText.length() == 1 && qText.at(0).isLetter()) {
+        QChar letra = qText.at(0).toLower(); // Converter para minúscula para evitar problemas com maiúsculas
+
+        // Verificar se a letra já está em ui->palavra ou ui->wrongletters
+        if (ui->Palavra->text().contains(letra) || ui->wrongLetters->toPlainText().contains(letra)) {
+        // Caso a letra já tenha sido usada, exiba uma mensagem ou trate o caso
+        ui->ServerMessages->setText("Essa letra já foi utilizada.");
+        return;
+        }
+    }
+
     ui->enterGameGuess->clear();
     QByteArray byteArray = qText.toUtf8();
     strcpy(cData.buffer, byteArray.constData());
 
+
+    
     send(thDataGame.sock,&cData,sizeof(ClientData),0);
 
 }

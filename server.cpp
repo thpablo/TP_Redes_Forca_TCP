@@ -28,7 +28,7 @@
 
 #include <cstring> // Para std::strcpy
 #include "data.h"
-#include "chat.h"
+
 #include <queue>
 
 using namespace std;
@@ -299,9 +299,6 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
 
-	pthread_t chatThread;
-	pthread_create(&chatThread, NULL, &chatMain, NULL);
-
 	while (gameStatus != WINNER && gameStatus != LOSER)
 	{
 		// decide quem é o jogador atual
@@ -368,9 +365,8 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	cout << "Status: " << resGameToString(gameStatus) << endl;
 	cout << "Fim de jogo\n"
 		 << endl;
-	pthread_join(chatThread, nullptr);
-	inACurrentGame = false;					  // Indica que não existe um jogo em andamento
-	pthread_cond_broadcast(&cond_has_a_game); // Acorda todas as threads para que possam jogar
+	//inACurrentGame = false;					  // Indica que não existe um jogo em andamento
+	//pthread_cond_broadcast(&cond_has_a_game); // Acorda todas as threads para que possam jogar
 }
 
 /* Lobby espera dois players se conectarem
@@ -514,22 +510,26 @@ void *chatRoom(void *param)
 	thdata *player2 = players->player2;
 
 	char buffer[1024], *result = NULL;
+	int desconexao;
 	do
 	{
 
 		printf("Esperando Mensagem do cliente...\n");
-		recv(player1->sock, buffer, sizeof(buffer), 0);
+		desconexao = recv(player1->sock, buffer, sizeof(buffer), 0);
 
+		if (desconexao <= 0)
+		{
+			shutdown(player1->sock,2);
+			return NULL;
+		}
 		printf("Mensagem recebida do cliente = %s\n", buffer);
 
-		if (result == NULL)
-		{
-			printf("enviando mensagem para os demais clientes, exlcuindo o remetente....\n");
+		printf("enviando mensagem para os demais clientes, exlcuindo o remetente....\n");
 
-			pthread_mutex_lock(&mutex);
-			send(player2->sock, buffer, sizeof(buffer), 0);
-			pthread_mutex_unlock(&mutex);
-		}
+		pthread_mutex_lock(&mutex);
+		send(player2->sock, buffer, sizeof(buffer), 0);
+		pthread_mutex_unlock(&mutex);
+		
 
 	} while (result == NULL);
 

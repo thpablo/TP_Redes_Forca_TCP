@@ -27,7 +27,7 @@ ClientData cData;
 
 pthread_attr_t attr;
 
-int kill;
+bool running;
 
 void connectSignalsAndSlots();
 void connectServer();
