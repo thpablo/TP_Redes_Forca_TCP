@@ -104,19 +104,6 @@ void MainWindow::sendGameMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     cData.type = GAME;
     QString qText = ui->enterGameGuess->text();
-
-    // Verificar se o qText contém apenas uma letra
-    if (qText.length() == 1 && qText.at(0).isLetter()) {
-        QChar letra = qText.at(0).toLower(); // Converter para minúscula para evitar problemas com maiúsculas
-
-        // Verificar se a letra já está em ui->palavra ou ui->wrongletters
-        if (ui->Palavra->text().contains(letra) || ui->wrongLetters->toPlainText().contains(letra)) {
-        // Caso a letra já tenha sido usada, exiba uma mensagem ou trate o caso
-        ui->ServerMessages->setText("Essa letra já foi utilizada.");
-        return;
-        }
-    }
-
     ui->enterGameGuess->clear();
     QByteArray byteArray = qText.toUtf8();
     strcpy(cData.buffer, byteArray.constData());
@@ -152,7 +139,7 @@ void MainWindow::connectServer(){
     
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(7891);  // Porta para o jogo
-    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serverAddr.sin_addr.s_addr = inet_addr("192.168.2.4");
     memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));  
 
     addr_size = sizeof serverAddr;
@@ -232,6 +219,12 @@ void MainWindow::refreshGame(const ServerData gameData){
 
     void MainWindow::appendChatMessage(const QString &message){
         ui->chatLogs->append(message);
+    if(gameData.flag == WINNER){
+        ui->ServerMessages->setText("Você Venceu!!!");
+    }
+    else if(gameData.flag == LOSER){
+        ui->ServerMessages->setText("Você Perdeu!!!");
+    }
 }
 
 void MainWindow::changeImage(int qtdErrors) {
