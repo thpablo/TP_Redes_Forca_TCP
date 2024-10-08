@@ -1,50 +1,55 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'loginDialogBox.h'
 **
-** Created by: The Qt Meta Object Compiler version 68 (Qt 6.2.4)
+** Created by: The Qt Meta Object Compiler version 68 (Qt 6.7.2)
 **
 ** WARNING! All changes made in this file will be lost!
 *****************************************************************************/
 
-#include <memory>
 #include "loginDialogBox.h"
-#include <QtCore/qbytearray.h>
 #include <QtCore/qmetatype.h>
+
+#include <QtCore/qtmochelpers.h>
+
+#include <memory>
+
+
+#include <QtCore/qxptype_traits.h>
 #if !defined(Q_MOC_OUTPUT_REVISION)
 #error "The header file 'loginDialogBox.h' doesn't include <QObject>."
 #elif Q_MOC_OUTPUT_REVISION != 68
-#error "This file was generated using the moc from 6.2.4. It"
+#error "This file was generated using the moc from 6.7.2. It"
 #error "cannot be used with the include files from this version of Qt."
 #error "(The moc has changed too much.)"
 #endif
 
-QT_BEGIN_MOC_NAMESPACE
+#ifndef Q_CONSTINIT
+#define Q_CONSTINIT
+#endif
+
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
-struct qt_meta_stringdata_LoginDialog_t {
-    const uint offsetsAndSize[10];
-    char stringdata0[53];
-};
-#define QT_MOC_LITERAL(ofs, len) \
-    uint(offsetof(qt_meta_stringdata_LoginDialog_t, stringdata0) + ofs), len 
-static const qt_meta_stringdata_LoginDialog_t qt_meta_stringdata_LoginDialog = {
-    {
-QT_MOC_LITERAL(0, 11), // "LoginDialog"
-QT_MOC_LITERAL(12, 8), // "textSent"
-QT_MOC_LITERAL(21, 0), // ""
-QT_MOC_LITERAL(22, 4), // "text"
-QT_MOC_LITERAL(27, 25) // "on_continueButton_clicked"
+QT_WARNING_DISABLE_GCC("-Wuseless-cast")
+namespace {
 
-    },
-    "LoginDialog\0textSent\0\0text\0"
+#ifdef QT_MOC_HAS_STRINGDATA
+struct qt_meta_stringdata_CLASSLoginDialogENDCLASS_t {};
+constexpr auto qt_meta_stringdata_CLASSLoginDialogENDCLASS = QtMocHelpers::stringData(
+    "LoginDialog",
+    "textSent",
+    "",
+    "text",
     "on_continueButton_clicked"
-};
-#undef QT_MOC_LITERAL
+);
+#else  // !QT_MOC_HAS_STRINGDATA
+#error "qtmochelpers.h not found or too old."
+#endif // !QT_MOC_HAS_STRINGDATA
+} // unnamed namespace
 
-static const uint qt_meta_data_LoginDialog[] = {
+Q_CONSTINIT static const uint qt_meta_data_CLASSLoginDialogENDCLASS[] = {
 
  // content:
-      10,       // revision
+      12,       // revision
        0,       // classname
        0,    0, // classinfo
        2,   14, // methods
@@ -69,6 +74,24 @@ static const uint qt_meta_data_LoginDialog[] = {
        0        // eod
 };
 
+Q_CONSTINIT const QMetaObject LoginDialog::staticMetaObject = { {
+    QMetaObject::SuperData::link<QDialog::staticMetaObject>(),
+    qt_meta_stringdata_CLASSLoginDialogENDCLASS.offsetsAndSizes,
+    qt_meta_data_CLASSLoginDialogENDCLASS,
+    qt_static_metacall,
+    nullptr,
+    qt_incomplete_metaTypeArray<qt_meta_stringdata_CLASSLoginDialogENDCLASS_t,
+        // Q_OBJECT / Q_GADGET
+        QtPrivate::TypeAndForceComplete<LoginDialog, std::true_type>,
+        // method 'textSent'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>,
+        QtPrivate::TypeAndForceComplete<const QString &, std::false_type>,
+        // method 'on_continueButton_clicked'
+        QtPrivate::TypeAndForceComplete<void, std::false_type>
+    >,
+    nullptr
+} };
+
 void LoginDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
 {
     if (_c == QMetaObject::InvokeMetaMethod) {
@@ -83,29 +106,13 @@ void LoginDialog::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         int *result = reinterpret_cast<int *>(_a[0]);
         {
             using _t = void (LoginDialog::*)(const QString & );
-            if (*reinterpret_cast<_t *>(_a[1]) == static_cast<_t>(&LoginDialog::textSent)) {
+            if (_t _q_method = &LoginDialog::textSent; *reinterpret_cast<_t *>(_a[1]) == _q_method) {
                 *result = 0;
                 return;
             }
         }
     }
 }
-
-const QMetaObject LoginDialog::staticMetaObject = { {
-    QMetaObject::SuperData::link<QDialog::staticMetaObject>(),
-    qt_meta_stringdata_LoginDialog.offsetsAndSize,
-    qt_meta_data_LoginDialog,
-    qt_static_metacall,
-    nullptr,
-qt_incomplete_metaTypeArray<qt_meta_stringdata_LoginDialog_t
-, QtPrivate::TypeAndForceComplete<LoginDialog, std::true_type>, QtPrivate::TypeAndForceComplete<void, std::false_type>, QtPrivate::TypeAndForceComplete<const QString &, std::false_type>
-, QtPrivate::TypeAndForceComplete<void, std::false_type>
-
-
->,
-    nullptr
-} };
-
 
 const QMetaObject *LoginDialog::metaObject() const
 {
@@ -115,7 +122,7 @@ const QMetaObject *LoginDialog::metaObject() const
 void *LoginDialog::qt_metacast(const char *_clname)
 {
     if (!_clname) return nullptr;
-    if (!strcmp(_clname, qt_meta_stringdata_LoginDialog.stringdata0))
+    if (!strcmp(_clname, qt_meta_stringdata_CLASSLoginDialogENDCLASS.stringdata0))
         return static_cast<void*>(this);
     return QDialog::qt_metacast(_clname);
 }
@@ -144,4 +151,3 @@ void LoginDialog::textSent(const QString & _t1)
     QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 QT_WARNING_POP
-QT_END_MOC_NAMESPACE

@@ -298,6 +298,7 @@ void inGame(Hangman &game, thdata &player1, thdata &player2)
 	ServerData sendData; // Dados envio servidor -> cliente
 	sendData.isAMessageFromServer = 0;
 	ClientData cData; // Dados recebimento cliente -> servidor
+	strcpy(game.wrongLetters, "");;
 
 	while (gameStatus != WINNER && gameStatus != LOSER)
 	{
@@ -458,6 +459,7 @@ struct PlayerPair
 string decideDifficulty(thdata *playerWhosDecide, thdata *anotherPlayer)
 {
 	ServerData sendData;
+	sendData.isAMessageFromServer = 1;
 	sendData = convertToChatBuffer("Server: Escolha a dificuldade para o jogo\n");
 	send(playerWhosDecide->sock, &sendData, sizeof(ServerData), 0);
 	sendData = convertToChatBuffer("Server: Aguarde o outro jogador escolher a dificuldade\n");
