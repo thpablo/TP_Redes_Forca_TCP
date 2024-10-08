@@ -481,7 +481,6 @@ void *lobby(void *param)
 	thdata *player1 = players->player1;
 	thdata *player2 = players->player2;
 	delete players; // Libere a memória alocada para players
-	ServerData sendData;
 	Hangman game;
 	string difficulty = "";
 
@@ -547,7 +546,6 @@ int main()
 	srand(time(NULL));
 	int welcomeSocket, chatSocket, newSocket, newChatSocket;
 	struct sockaddr_in serverAddr, chatAddr;
-	socklen_t addr_size;
 	pthread_t threads[NUM_THREADS][THREADS_TUPLE];
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
@@ -561,7 +559,7 @@ int main()
 	// Configuração do endereço para o jogo
 	serverAddr.sin_family = AF_INET;
 	serverAddr.sin_port = htons(7891); // Porta do jogo
-	serverAddr.sin_addr.s_addr = inet_addr("172.25.208.1");
+	serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	memset(serverAddr.sin_zero, '\0', sizeof serverAddr.sin_zero);
 
 	bind(welcomeSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
@@ -572,7 +570,7 @@ int main()
 	// Configuração do endereço para o chat
 	chatAddr.sin_family = AF_INET;
 	chatAddr.sin_port = htons(7892); // Porta separada para o chat
-	chatAddr.sin_addr.s_addr = inet_addr("172.25.208.1");
+	chatAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
 	memset(chatAddr.sin_zero, '\0', sizeof chatAddr.sin_zero);
 
 	bind(chatSocket, (struct sockaddr *)&chatAddr, sizeof(chatAddr));

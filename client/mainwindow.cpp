@@ -51,6 +51,7 @@ void MainWindow::connectSignalsAndSlots(){
     
 }
 
+//função para receber dados do jogo do servidor
 void* ReceiveGameData(void *param) {
     MainWindow *mainWindow = (MainWindow *) param;
     ServerData gameData;
@@ -78,6 +79,7 @@ void* ReceiveGameData(void *param) {
     pthread_exit(NULL);
 }
 
+//função para receber dados do chat do servidor
 void* ReceiveChatData(void *param) {
     MainWindow *mainWindow = (MainWindow *) param;
     char buffer[1024];
@@ -94,6 +96,7 @@ void* ReceiveChatData(void *param) {
     pthread_exit(NULL);
 }
 
+//encia mensagem da tentativa pro server
 void MainWindow::sendGameMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     cData.type = GAME;
@@ -108,6 +111,7 @@ void MainWindow::sendGameMessage(){
 
 }
 
+//encia mensagem da chat pro server
 void MainWindow::sendChatMessage(){
     memset(cData.buffer, '\0', sizeof(cData.buffer)); // resetar o buffer
     emit newChatMessageReceived("Você: " + ui->ChatEntry->text());
@@ -122,7 +126,7 @@ void MainWindow::sendChatMessage(){
 void MainWindow::connectServer(){
     int gameSocket, chatSocket;
     struct sockaddr_in serverAddr;
-    socklen_t addr_size;
+    //socklen_t addr_size;
     pthread_t threadRecvGameId, threadRecvChatId;
 
     pthread_attr_init(&attr);
@@ -133,10 +137,10 @@ void MainWindow::connectServer(){
     
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(7891);  // Porta para o jogo
-    serverAddr.sin_addr.s_addr = inet_addr("192.168.2.4");
+    serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));  
 
-    addr_size = sizeof serverAddr;
+    //addr_size = sizeof serverAddr;
     connect_socket(gameSocket, (struct sockaddr *) &serverAddr, sizeof(serverAddr));
 
     printf("Conectando ao servidor de jogo...\n");

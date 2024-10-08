@@ -16,6 +16,7 @@ LoginDialog::~LoginDialog()
     delete ui;
 }
 
+//tela para o usuário entrar com próprio nome
 void LoginDialog::on_continueButton_clicked(){
     QString nome = ui->nomeTextEdit->toPlainText();
     QString resultStr;

@@ -27,11 +27,11 @@ ClientData cData;
 
 pthread_attr_t attr;
 
-bool running;
+bool running;//flag que determina se o jogo ainda está rodando
 
 void connectSignalsAndSlots();
-void connectServer();
-void playSound(int type);
+void connectServer();//inicia a conexão dos sockets
+void playSound(int type); 
 void changeImage(int qtdErrors);
 public:
     friend void* ReceiveGameData(void *param);
@@ -50,10 +50,10 @@ signals:
     void newChatMessageReceived(const QString &message);
 
 public slots:
-    void refreshGame(const ServerData gameData);
-    void appendChatMessage(const QString &message);
-    void sendGameMessage();
-    void sendChatMessage();
+    void refreshGame(const ServerData gameData);//atualiza tela com as informações recebidas do server
+    void appendChatMessage(const QString &message);//atualiza chatLog
+    void sendGameMessage();//envia mensagem de jogo
+    void sendChatMessage();//envia mensagem de Chat
 
 
 private:
